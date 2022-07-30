@@ -22,11 +22,11 @@ fn main() {
         ..
     } = new_pos;
 
-    let new_file::BitBoard(bitval) = white_bitboard;
+    let new_file::BitBoard(_bitval) = white_bitboard;
 
-    println!("Bit value of BitBoard: \n{:b}", bitval as u64);
+    // println!("Bit value of BitBoard: \n{:b}", bitval as u64);
 
-    println!("Pretty BitBoard: {}", white_bitboard.pretty());
+    // println!("Pretty BitBoard: {}", white_bitboard.pretty());
 
     println!("Pretty Position: \n{}", new_pos.pretty());
 }
