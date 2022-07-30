@@ -1,12 +1,12 @@
 mod chess_pos;
 
 fn main() {
-    // pieces on the entire a-file
     // let empty_val = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    let val = 0b1000000010000000100000001000000010000000100000001000000010000000;
+    // pieces on the entire a-file
+    let val: u64 = 0b1000000010000000100000001000000010000000100000001000000010000000;
 
-    // define a position
-    let new_pos = chess_pos::Position {
+    // define a new position
+    let new_pos: chess_pos::Position = chess_pos::Position {
         bb_sides: [chess_pos::BitBoard(val), chess_pos::BitBoard(val)],
         bb_pieces: [[chess_pos::BitBoard(val); 6]; 2],
     };
@@ -16,17 +16,17 @@ fn main() {
         new_pos.bb_pieces[chess_pos::Sides::WHITE][chess_pos::Pieces::QUEEN];
 
     // struct destructuring:
-    // this lets white_bitboard equal the white bitboard
+    // this lets white_bitboard equal the bitboard containing the white pieces
     let chess_pos::Position {
         bb_sides: [white_bitboard, ..],
         ..
     } = new_pos;
 
-    let chess_pos::BitBoard(_bitval) = white_bitboard;
+    let chess_pos::BitBoard(bitval) = white_bitboard;
 
-    // println!("Bit value of BitBoard: \n{:b}", bitval as u64);
+    println!("Bit value of white pieces BitBoard: \n{:b}", bitval as u64);
 
-    // println!("Pretty BitBoard: {}", white_bitboard.pretty());
+    println!("Pretty BitBoard: {}", white_bitboard.pretty());
 
     println!("Pretty Position: \n{}", new_pos.pretty());
 }

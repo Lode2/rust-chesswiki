@@ -5,7 +5,7 @@ pub struct BitBoard(pub u64);
 
 // add methods to the BitBoard struct
 impl BitBoard {
-    pub fn _pretty(self) -> String {
+    pub fn pretty(self) -> String {
         let BitBoard(pretty) = self;
         let mut pretty_board = String::new();
 
