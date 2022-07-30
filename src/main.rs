@@ -1,4 +1,4 @@
-mod new_file;
+mod chess_pos;
 
 fn main() {
     // pieces on the entire a-file
@@ -6,23 +6,23 @@ fn main() {
     let val = 0b1000000010000000100000001000000010000000100000001000000010000000;
 
     // define a position
-    let new_pos = new_file::Position {
-        bb_sides: [new_file::BitBoard(val), new_file::BitBoard(val)],
-        bb_pieces: [[new_file::BitBoard(val); 6]; 2],
+    let new_pos = chess_pos::Position {
+        bb_sides: [chess_pos::BitBoard(val), chess_pos::BitBoard(val)],
+        bb_pieces: [[chess_pos::BitBoard(val); 6]; 2],
     };
 
     // get the bitboard with all the white queens
-    let _white_queens: new_file::BitBoard =
-        new_pos.bb_pieces[new_file::Sides::WHITE][new_file::Pieces::QUEEN];
+    let _white_queens: chess_pos::BitBoard =
+        new_pos.bb_pieces[chess_pos::Sides::WHITE][chess_pos::Pieces::QUEEN];
 
     // struct destructuring:
     // this lets white_bitboard equal the white bitboard
-    let new_file::Position {
+    let chess_pos::Position {
         bb_sides: [white_bitboard, ..],
         ..
     } = new_pos;
 
-    let new_file::BitBoard(_bitval) = white_bitboard;
+    let chess_pos::BitBoard(_bitval) = white_bitboard;
 
     // println!("Bit value of BitBoard: \n{:b}", bitval as u64);
 
