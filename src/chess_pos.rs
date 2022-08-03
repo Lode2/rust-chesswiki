@@ -1,15 +1,37 @@
 // file containing bitboard and position struct
 
+use std::str::Chars;
+
 #[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
 pub struct BitBoard(pub u64);
+
+fn to_pretty_index(ugly_index: usize) -> usize {
+    let div_by_8: f32 = ugly_index as f32 / 8.;
+    let floor: usize = (div_by_8).floor() as usize;
+    let pretty_index: usize = (7 - floor) * 8 + ((div_by_8 - floor as f32) * 8.) as usize;
+    return pretty_index;
+}
+
+fn rearrange_array(old_array: Chars) -> [char; 64] {
+    let mut new_array: [char; 64] = [' '; 64];
+    for (old_idx, itm) in old_array.into_iter().enumerate() {
+        let div_by_8: f32 = old_idx as f32 / 8.;
+        let floor: usize = (div_by_8).floor() as usize;
+        let new_idx: usize = (7 - floor) * 8 + ((div_by_8 - floor as f32) * 8.) as usize;
+        new_array[new_idx] = itm;
+    }
+    return new_array;
+}
 
 // add methods to the BitBoard struct
 impl BitBoard {
     pub fn pretty(self) -> String {
         let BitBoard(pretty) = self;
-        let mut pretty_board = String::new();
+        let formatted_bitboard = format!("{pretty:064b}");
+        let pretty_array: [char; 64] = rearrange_array(formatted_bitboard.chars());
+        let mut pretty_board: String = String::new();
 
-        for (i, x) in format!("{pretty:b}").bytes().enumerate() {
+        for (i, x) in pretty_array.into_iter().enumerate() {
             if i % 8 == 0 {
                 pretty_board += "\n";
                 pretty_board += &(x as char).to_string();
@@ -56,7 +78,7 @@ impl Position {
             let BitBoard(val) = i;
 
             // loop over a stringified u64, get bit position and bit value
-            for k in format!("{val:b}").to_string().char_indices() {
+            for k in format!("{val:064b}").to_string().char_indices() {
                 if k.1 == '1' {
                     let string_representation: &str = match j {
                         0 => "P ",   // wpawn
@@ -73,7 +95,9 @@ impl Position {
                         10 => "q ",  // bqueen
                         _ => "Err ", // in case of no match
                     };
-                    pretty_array[k.0] = string_representation;
+                    // adjusted k.0 index to inverse board
+                    pretty_array[to_pretty_index(k.0)] = string_representation;
+                    // pretty_array[k.0] = string_representation;
                 }
             }
             j += 1;
@@ -84,7 +108,7 @@ impl Position {
         // transforming the pretty array into a pretty string
         let mut pretty_pos: String = String::new();
         for i in 0..64 {
-            if i % 8 == 0 && i != 0 {
+            if i % 8 == 0 {
                 pretty_pos += "\n"
             }
             pretty_pos += pretty_array[i];
@@ -92,6 +116,8 @@ impl Position {
 
         return pretty_pos;
     }
+
+    // hi
 }
 
 // intuitive pointers to the position's sides bitboard
