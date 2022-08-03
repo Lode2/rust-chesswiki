@@ -8,16 +8,14 @@ pub struct BitBoard(pub u64);
 fn to_pretty_index(ugly_index: usize) -> usize {
     let div_by_8: f32 = ugly_index as f32 / 8.;
     let floor: usize = (div_by_8).floor() as usize;
-    let pretty_index: usize = (7 - floor) * 8 + ((div_by_8 - floor as f32) * 8.) as usize;
+    let pretty_index: usize = (7 - floor) * 8 + ((div_by_8 % 1.) * 8.) as usize;
     return pretty_index;
 }
 
 fn rearrange_array(old_array: Chars) -> [char; 64] {
     let mut new_array: [char; 64] = [' '; 64];
     for (old_idx, itm) in old_array.into_iter().enumerate() {
-        let div_by_8: f32 = old_idx as f32 / 8.;
-        let floor: usize = (div_by_8).floor() as usize;
-        let new_idx: usize = (7 - floor) * 8 + ((div_by_8 - floor as f32) * 8.) as usize;
+        let new_idx: usize = to_pretty_index(old_idx);
         new_array[new_idx] = itm;
     }
     return new_array;
@@ -45,7 +43,6 @@ impl BitBoard {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Position {
     /// Board for each side
     pub bb_sides: [BitBoard; 2],

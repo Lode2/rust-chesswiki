@@ -25,13 +25,13 @@ fn main() {
         const BKNIGHT: chess_pos::BitBoard =
             chess_pos::BitBoard(0b0000000000000000000000000000000000000000000000000000000001000010);
         const WKING: chess_pos::BitBoard =
-            chess_pos::BitBoard(0b0001000000000000000000000000000000000000000000000000000000000000);
-        const BKING: chess_pos::BitBoard =
-            chess_pos::BitBoard(0b0000000000000000000000000000000000000000000000000000000000010000);
-        const WQUEEN: chess_pos::BitBoard =
             chess_pos::BitBoard(0b0000100000000000000000000000000000000000000000000000000000000000);
-        const BQUEEN: chess_pos::BitBoard =
+        const BKING: chess_pos::BitBoard =
             chess_pos::BitBoard(0b0000000000000000000000000000000000000000000000000000000000001000);
+        const WQUEEN: chess_pos::BitBoard =
+            chess_pos::BitBoard(0b0001000000000000000000000000000000000000000000000000000000000000);
+        const BQUEEN: chess_pos::BitBoard =
+            chess_pos::BitBoard(0b0000000000000000000000000000000000000000000000000000000000010000);
     }
     // let empty_val = 0b0000000000000000000000000000000000000000000000000000000000000000;
     // pieces on the entire a-file
