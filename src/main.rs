@@ -43,7 +43,7 @@ fn main() {
         bb_pieces: [[chess_pos::BitBoard(val); 6]; 2],
     };
 
-    let starting_pos: chess_pos::Position = chess_pos::Position {
+    let mut starting_pos: chess_pos::Position = chess_pos::Position {
         bb_sides: ([StartingPos::WHITE, StartingPos::BLACK]),
         bb_pieces: ([
             [
@@ -85,5 +85,12 @@ fn main() {
     println!("Pretty Position:{}", new_pos.pretty());
 
     println!("Pretty Starting Position:{}", starting_pos.pretty());
+
+    let my_game: String =
+        String::from("r4rk1/pQ1bbppp/2p1nq1n/3pp3/2BPP3/P1N1BN2/1P3PPP/R3K2R w KQ - 0 13");
+
+    starting_pos.load(&my_game);
+
+    println!("Loaded FEN:{}", starting_pos.pretty())
 }
 // https://www.codeproject.com/Articles/5313417/Worlds-Fastest-Bitboard-Chess-Movegenerator

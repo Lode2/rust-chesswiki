@@ -1,10 +1,6 @@
 // file containing bitboard and position struct
 
-use std::str::Chars;
-
-#[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
-pub struct BitBoard(pub u64);
-
+// generally used functions
 fn to_pretty_index(ugly_index: usize) -> usize {
     let div_by_8: f32 = ugly_index as f32 / 8.;
     let floor: usize = (div_by_8).floor() as usize;
@@ -12,7 +8,7 @@ fn to_pretty_index(ugly_index: usize) -> usize {
     return pretty_index;
 }
 
-fn rearrange_array(old_array: Chars) -> [char; 64] {
+fn rearrange_array(old_array: std::str::Chars) -> [char; 64] {
     let mut new_array: [char; 64] = [' '; 64];
     for (old_idx, itm) in old_array.into_iter().enumerate() {
         let new_idx: usize = to_pretty_index(old_idx);
@@ -21,9 +17,12 @@ fn rearrange_array(old_array: Chars) -> [char; 64] {
     return new_array;
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
+pub struct BitBoard(pub u64);
+
 // add methods to the BitBoard struct
 impl BitBoard {
-    pub fn pretty(self) -> String {
+    pub fn pretty(&self) -> String {
         let BitBoard(pretty) = self;
         let formatted_bitboard = format!("{pretty:064b}");
         let pretty_array: [char; 64] = rearrange_array(formatted_bitboard.chars());
@@ -43,6 +42,7 @@ impl BitBoard {
     }
 }
 
+#[derive(Debug)]
 pub struct Position {
     /// Board for each side
     pub bb_sides: [BitBoard; 2],
@@ -51,7 +51,7 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn pretty(self) -> String {
+    pub fn pretty(&self) -> String {
         let mut pretty_array: [&str; 64] = ["x "; 64];
 
         // destructuring the position, white is the bitboard for white, wpawn the bitboard for white pawns etc.
@@ -114,7 +114,12 @@ impl Position {
         return pretty_pos;
     }
 
-    // hi
+    pub fn load(&mut self, FEN: &str) {
+        self.bb_pieces[0][1] =
+            BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
+        self.bb_sides[0] =
+            BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
+    }
 }
 
 // intuitive pointers to the position's sides bitboard
