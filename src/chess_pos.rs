@@ -1,4 +1,5 @@
 // file containing bitboard and position struct
+use regex::Regex;
 
 // generally used functions
 fn to_pretty_index(ugly_index: usize) -> usize {
@@ -114,7 +115,61 @@ impl Position {
         return pretty_pos;
     }
 
-    pub fn load(&mut self, FEN: &str) {
+    pub fn load(&mut self, fen: &str) {
+        // split the FEN using regex
+
+        let fen_split_regex: Regex = Regex::new(" ").unwrap();
+        let slash_regex = Regex::new("/").unwrap();
+
+        // remove the slashes from the piece data of the fen
+        let slashless = slash_regex.replace_all(fen, "");
+        // split the piece data and meta data of the fen
+        let fen_data_split: Vec<&str> = fen_split_regex.splitn(&slashless, 2).collect();
+
+        fn myfunc(a: u64) {
+            println!("");
+        }
+
+        let mut square_num: u64 = 0;
+        for i in fen_data_split[0].bytes() {
+            square_num += 1;
+
+            match i {
+                0b110001 => square_num += 1,     // 1
+                0b110010 => square_num += 2,     // 2
+                0b110011 => square_num += 3,     // 3
+                0b110100 => square_num += 4,     // 4
+                0b110101 => square_num += 5,     // 5
+                0b110110 => square_num += 6,     // 6
+                0b110111 => square_num += 7,     // 7
+                0b111000 => square_num += 8,     // 8
+                0b1110000 => myfunc(square_num), // p
+                0b1110010 => myfunc(square_num), // r
+                0b1101110 => myfunc(square_num), // n
+                0b1100010 => myfunc(square_num), // b
+                0b1101011 => myfunc(square_num), // k
+                0b1110001 => myfunc(square_num), // q
+                0b1010000 => myfunc(square_num), // P
+                0b1010010 => myfunc(square_num), // R
+                0b1001110 => myfunc(square_num), // N
+                0b1000010 => myfunc(square_num), // B
+                0b1001011 => myfunc(square_num), // K
+                0b1010001 => myfunc(square_num), // Q
+                _ => println!("No match found in the fen data!"),
+            };
+            // println!("{} has the byte value {:b}", i.escape_ascii(), i);
+        }
+
+        // let piece_regex: Regex = Regex::new("[1-8]").unwrap();
+
+        // for i in 0..1 {
+        //     let pieces: Vec<_> = board_rank[i].chars().collect();
+        //     println!("{:?}", pieces)
+        // }
+
+        // append bits to respective bitboard for the occupied squares
+
+        // replace the old bitboards
         self.bb_pieces[0][1] =
             BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
         self.bb_sides[0] =

@@ -86,11 +86,15 @@ fn main() {
 
     println!("Pretty Starting Position:{}", starting_pos.pretty());
 
-    let my_game: String =
-        String::from("r4rk1/pQ1bbppp/2p1nq1n/3pp3/2BPP3/P1N1BN2/1P3PPP/R3K2R w KQ - 0 13");
+    // let my_game: String =
+    //     String::from("r4rk1/pQ1bbppp/2p1nq1n/3pp3/2BPP3/P1N1BN2/1P3PPP/R3K2R w KQ - 0 13");
+    let example_game: String =
+        String::from("r4rk1/pbqn1pp1/1pn1p2p/2ppP2Q/3P4/2PBP1B1/PP1N2PP/R4RK1 w - - 0 14");
 
-    starting_pos.load(&my_game);
+    // let program_test = String::from("12345678prnbkqPRNBKQ");
 
-    println!("Loaded FEN:{}", starting_pos.pretty())
+    starting_pos.load(&example_game);
+
+    // println!("Loaded FEN:{}", starting_pos.pretty())
 }
 // https://www.codeproject.com/Articles/5313417/Worlds-Fastest-Bitboard-Chess-Movegenerator
