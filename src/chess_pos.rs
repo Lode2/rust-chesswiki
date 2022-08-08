@@ -126,8 +126,13 @@ impl Position {
         // split the piece data and meta data of the fen
         let fen_data_split: Vec<&str> = fen_split_regex.splitn(&slashless, 2).collect();
 
-        fn myfunc(a: u64) {
-            println!("");
+        fn myfunc(square_pos: u64, color: u8, piece: u8) {
+            // format square_pos to binary number
+            println!("Place a {piece} of color {color} on square {square_pos}");
+            // self.bb_pieces[0][1] =
+            //     BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
+            // self.bb_sides[0] =
+            //     BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
         }
 
         let mut square_num: u64 = 0;
@@ -135,26 +140,34 @@ impl Position {
             square_num += 1;
 
             match i {
-                0b110001 => square_num += 1,     // 1
-                0b110010 => square_num += 2,     // 2
-                0b110011 => square_num += 3,     // 3
-                0b110100 => square_num += 4,     // 4
-                0b110101 => square_num += 5,     // 5
-                0b110110 => square_num += 6,     // 6
-                0b110111 => square_num += 7,     // 7
-                0b111000 => square_num += 8,     // 8
-                0b1110000 => myfunc(square_num), // p
-                0b1110010 => myfunc(square_num), // r
-                0b1101110 => myfunc(square_num), // n
-                0b1100010 => myfunc(square_num), // b
-                0b1101011 => myfunc(square_num), // k
-                0b1110001 => myfunc(square_num), // q
-                0b1010000 => myfunc(square_num), // P
-                0b1010010 => myfunc(square_num), // R
-                0b1001110 => myfunc(square_num), // N
-                0b1000010 => myfunc(square_num), // B
-                0b1001011 => myfunc(square_num), // K
-                0b1010001 => myfunc(square_num), // Q
+                0b110001 => (),                        // 1, 1 is already added at each iteration
+                0b110010 => square_num += 1,           // 2
+                0b110011 => square_num += 2,           // 3
+                0b110100 => square_num += 3,           // 4
+                0b110101 => square_num += 4,           // 5
+                0b110110 => square_num += 5,           // 6
+                0b110111 => square_num += 6,           // 7
+                0b111000 => square_num += 7,           // 8
+                0b1010000 => myfunc(square_num, 0, 0), // P
+                0b1010010 => myfunc(square_num, 0, 3), // R
+                0b1001110 => myfunc(square_num, 0, 2), // N
+                0b1000010 => myfunc(square_num, 0, 1), // B
+                0b1001011 => myfunc(square_num, 0, 5), // K
+                0b1010001 => myfunc(square_num, 0, 4), // Q
+                0b1110000 => myfunc(square_num, 1, 0), // p
+                0b1110010 => myfunc(square_num, 1, 3), // r
+                0b1101110 => myfunc(square_num, 1, 2), // n
+                0b1100010 => myfunc(square_num, 1, 1), // b
+                0b1101011 => myfunc(square_num, 1, 5), // k
+                0b1110001 => myfunc(square_num, 1, 4), // q
+                0b1011010 => {
+                    self.bb_pieces[0][1] = BitBoard(
+                        0b0000000000000000000000000001000000000000000000000000000000000000,
+                    );
+                    self.bb_sides[0] = BitBoard(
+                        0b0000000000000000000000000001000000000000000000000000000000000000,
+                    );
+                }
                 _ => println!("No match found in the fen data!"),
             };
             // println!("{} has the byte value {:b}", i.escape_ascii(), i);
@@ -169,7 +182,18 @@ impl Position {
 
         // append bits to respective bitboard for the occupied squares
 
+        println!(
+            "{}",
+            BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000).pretty()
+        );
+
         // replace the old bitboards
+        let previous_val = 0b0000000000000000000000000001000000000000000000000000000000000000;
+        let square_pos = 32;
+        self.bb_pieces[0][1] = BitBoard(previous_val ^ (1 << (square_pos - 1))); // WORKS!!
+
+        println!("{}", self.bb_pieces[0][1].pretty());
+
         self.bb_pieces[0][1] =
             BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
         self.bb_sides[0] =
