@@ -1,14 +1,16 @@
 // file containing bitboard and position struct
 use regex::Regex;
 
-// generally used functions
+// generally used functions for this file
+// transform the an index of a square in a bitboard to an index for display
 fn to_pretty_index(ugly_index: usize) -> usize {
     let div_by_8: f32 = ugly_index as f32 / 8.;
     let floor: usize = (div_by_8).floor() as usize;
-    let pretty_index: usize = (7 - floor) * 8 + ((div_by_8 % 1.) * 8.) as usize;
+    let pretty_index: usize = (7 - floor) * 8 + 7 - ((div_by_8 % 1.) * 8.) as usize;
     return pretty_index;
 }
 
+// transform a bitboard-ordered-array to an array that can be used for display
 fn rearrange_array(old_array: std::str::Chars) -> [char; 64] {
     let mut new_array: [char; 64] = [' '; 64];
     for (old_idx, itm) in old_array.into_iter().enumerate() {
@@ -18,11 +20,13 @@ fn rearrange_array(old_array: std::str::Chars) -> [char; 64] {
     return new_array;
 }
 
+// define objects and apply methods to those objects
 #[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
 pub struct BitBoard(pub u64);
 
 // add methods to the BitBoard struct
 impl BitBoard {
+    // creates a pretty string of the bitboard (for debugging purposes)
     pub fn pretty(&self) -> String {
         let BitBoard(pretty) = self;
         let formatted_bitboard = format!("{pretty:064b}");
@@ -41,6 +45,12 @@ impl BitBoard {
         }
         return pretty_board;
     }
+
+    // given an initial bitboard u64, flip the bit at position square_pos
+    pub fn bit_flip(&self, square_pos: u8) -> BitBoard {
+        let BitBoard(old_u64) = self;
+        return BitBoard(old_u64 ^ (1 << (square_pos - 1)));
+    }
 }
 
 #[derive(Debug)]
@@ -52,6 +62,7 @@ pub struct Position {
 }
 
 impl Position {
+    // creates a pretty string of the position (for debugging purposes)
     pub fn pretty(&self) -> String {
         let mut pretty_array: [&str; 64] = ["x "; 64];
 
@@ -115,8 +126,11 @@ impl Position {
         return pretty_pos;
     }
 
+    // load a fen position
     pub fn load(&mut self, fen: &str) {
-        // split the FEN using regex
+        // start with empty position
+        self.bb_sides = [BitBoard(0); 2];
+        self.bb_pieces = [[BitBoard(0); 6]; 2];
 
         let fen_split_regex: Regex = Regex::new(" ").unwrap();
         let slash_regex = Regex::new("/").unwrap();
@@ -126,78 +140,34 @@ impl Position {
         // split the piece data and meta data of the fen
         let fen_data_split: Vec<&str> = fen_split_regex.splitn(&slashless, 2).collect();
 
-        fn myfunc(square_pos: u64, color: u8, piece: u8) {
-            // format square_pos to binary number
-            println!("Place a {piece} of color {color} on square {square_pos}");
-            // self.bb_pieces[0][1] =
-            //     BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
-            // self.bb_sides[0] =
-            //     BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
-        }
-
-        let mut square_num: u64 = 0;
+        let mut square_num: u8 = 0;
         for i in fen_data_split[0].bytes() {
             square_num += 1;
 
             match i {
-                0b110001 => (),                        // 1, 1 is already added at each iteration
-                0b110010 => square_num += 1,           // 2
-                0b110011 => square_num += 2,           // 3
-                0b110100 => square_num += 3,           // 4
-                0b110101 => square_num += 4,           // 5
-                0b110110 => square_num += 5,           // 6
-                0b110111 => square_num += 6,           // 7
-                0b111000 => square_num += 7,           // 8
-                0b1010000 => myfunc(square_num, 0, 0), // P
-                0b1010010 => myfunc(square_num, 0, 3), // R
-                0b1001110 => myfunc(square_num, 0, 2), // N
-                0b1000010 => myfunc(square_num, 0, 1), // B
-                0b1001011 => myfunc(square_num, 0, 5), // K
-                0b1010001 => myfunc(square_num, 0, 4), // Q
-                0b1110000 => myfunc(square_num, 1, 0), // p
-                0b1110010 => myfunc(square_num, 1, 3), // r
-                0b1101110 => myfunc(square_num, 1, 2), // n
-                0b1100010 => myfunc(square_num, 1, 1), // b
-                0b1101011 => myfunc(square_num, 1, 5), // k
-                0b1110001 => myfunc(square_num, 1, 4), // q
-                0b1011010 => {
-                    self.bb_pieces[0][1] = BitBoard(
-                        0b0000000000000000000000000001000000000000000000000000000000000000,
-                    );
-                    self.bb_sides[0] = BitBoard(
-                        0b0000000000000000000000000001000000000000000000000000000000000000,
-                    );
-                }
+                0b110001 => (),              // 1, 1 is already added at each iteration
+                0b110010 => square_num += 1, // 2
+                0b110011 => square_num += 2, // 3
+                0b110100 => square_num += 3, // 4
+                0b110101 => square_num += 4, // 5
+                0b110110 => square_num += 5, // 6
+                0b110111 => square_num += 6, // 7
+                0b111000 => square_num += 7, // 8
+                0b1010000 => self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_flip(square_num), // P
+                0b1010010 => self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_flip(square_num), // R
+                0b1001110 => self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_flip(square_num), // N
+                0b1000010 => self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_flip(square_num), // B
+                0b1001011 => self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_flip(square_num), // K
+                0b1010001 => self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_flip(square_num), // Q
+                0b1110000 => self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_flip(square_num), // p
+                0b1110010 => self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_flip(square_num), // r
+                0b1101110 => self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_flip(square_num), // n
+                0b1100010 => self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_flip(square_num), // b
+                0b1101011 => self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_flip(square_num), // k
+                0b1110001 => self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_flip(square_num), // q
                 _ => println!("No match found in the fen data!"),
             };
-            // println!("{} has the byte value {:b}", i.escape_ascii(), i);
         }
-
-        // let piece_regex: Regex = Regex::new("[1-8]").unwrap();
-
-        // for i in 0..1 {
-        //     let pieces: Vec<_> = board_rank[i].chars().collect();
-        //     println!("{:?}", pieces)
-        // }
-
-        // append bits to respective bitboard for the occupied squares
-
-        println!(
-            "{}",
-            BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000).pretty()
-        );
-
-        // replace the old bitboards
-        let previous_val = 0b0000000000000000000000000001000000000000000000000000000000000000;
-        let square_pos = 32;
-        self.bb_pieces[0][1] = BitBoard(previous_val ^ (1 << (square_pos - 1))); // WORKS!!
-
-        println!("{}", self.bb_pieces[0][1].pretty());
-
-        self.bb_pieces[0][1] =
-            BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
-        self.bb_sides[0] =
-            BitBoard(0b0000000000000000000000000001000000000000000000000000000000000000);
     }
 }
 
