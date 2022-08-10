@@ -7,6 +7,7 @@ fn to_pretty_index(ugly_index: usize) -> usize {
     let div_by_8: f32 = ugly_index as f32 / 8.;
     let floor: usize = (div_by_8).floor() as usize;
     let pretty_index: usize = (floor) * 8 + 7 - ((div_by_8 % 1.) * 8.) as usize;
+    // println!("ugly_index:{}, pretty_index:{}", ugly_index, pretty_index);
     return pretty_index;
 }
 
@@ -51,8 +52,7 @@ impl BitBoard {
     // given an initial bitboard u64, flip the bit at position square_pos
     pub fn bit_flip(&self, square_pos: usize) -> BitBoard {
         let BitBoard(old_u6) = self;
-        println!("old_u6:{}, square_pos:{}", old_u6, square_pos);
-        return BitBoard(old_u6 ^ (1 << (square_pos - 1)));
+        return BitBoard(old_u6 ^ (1 << (square_pos)));
     }
 }
 
@@ -168,13 +168,15 @@ impl Position {
         let slashless = slash_regex.replace_all(fen, "");
         // split the piece data and meta data of the fen
         let fen_data_split: Vec<&str> = fen_split_regex.splitn(&slashless, 2).collect();
+        println!("{:?}", fen_data_split[0]);
 
         let mut square_count: usize = 0;
         for i in fen_data_split[0].bytes() {
-            square_count += 1;
-            println!("count:{}", square_count);
-            let square_idx: usize = to_pretty_index(square_count);
+            let div_by_8: f32 = square_count as f32 / 8.;
+            let floor: usize = (div_by_8).floor() as usize;
+            let square_idx: usize = (7 - floor) * 8 + ((div_by_8 % 1.) * 8.) as usize;
 
+            // catch which piece bitboard needs to be updated
             match i {
                 0b110001 => (),                // 1, 1 is already added at each iteration
                 0b110010 => square_count += 1, // 2
@@ -184,20 +186,57 @@ impl Position {
                 0b110110 => square_count += 5, // 6
                 0b110111 => square_count += 6, // 7
                 0b111000 => square_count += 7, // 8
-                0b1010000 => self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_flip(square_idx), // P
-                0b1010010 => self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_flip(square_idx), // R
-                0b1001110 => self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_flip(square_idx), // N
-                0b1000010 => self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_flip(square_idx), // B
-                0b1001011 => self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_flip(square_idx), // K
-                0b1010001 => self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_flip(square_idx), // Q
-                0b1110000 => self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_flip(square_idx), // p
-                0b1110010 => self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_flip(square_idx), // r
-                0b1101110 => self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_flip(square_idx), // n
-                0b1100010 => self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_flip(square_idx), // b
-                0b1101011 => self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_flip(square_idx), // k
-                0b1110001 => self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_flip(square_idx), // q
+                0b1010000 => {
+                    self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_flip(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                } // P
+                0b1010010 => {
+                    self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_flip(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                } // R
+                0b1001110 => {
+                    self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_flip(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                } // N
+                0b1000010 => {
+                    self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_flip(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                } // B
+                0b1001011 => {
+                    self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_flip(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                } // K
+                0b1010001 => {
+                    self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_flip(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                } // Q
+                0b1110000 => {
+                    self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_flip(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                } // p
+                0b1110010 => {
+                    self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_flip(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                } // r
+                0b1101110 => {
+                    self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_flip(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                } // n
+                0b1100010 => {
+                    self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_flip(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                } // b
+                0b1101011 => {
+                    self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_flip(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                } // k
+                0b1110001 => {
+                    self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_flip(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                } // q
                 _ => println!("No match found in the fen data!"),
             };
+            square_count += 1;
         }
     }
 }

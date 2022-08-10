@@ -28,14 +28,21 @@ fn main() {
     let white_pawns: chess_pos::BitBoard =
         my_pos.bb_pieces[chess_pos::Sides::WHITE][chess_pos::Pieces::PAWN];
 
-    println!("All the white queens:{}", white_pawns.pretty());
+    println!("All the white pawns:{}", white_pawns.pretty());
 
-    let test_starting_pos = chess_pos::Position {
+    let mut test_starting_pos = chess_pos::Position {
         ..chess_pos::Position::starting_pos()
     };
 
     println!(
         "testing new default option for position struct:{}",
+        test_starting_pos.pretty()
+    );
+
+    test_starting_pos.load(starting_pos_fen);
+
+    println!(
+        "To confirm that it's the same:{}",
         test_starting_pos.pretty()
     );
 }
