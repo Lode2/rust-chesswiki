@@ -1,30 +1,9 @@
 // file containing bitboard and position struct
 use regex::Regex;
 
-// generally used functions for this file
-// transform the an index of a square in a bitboard to an index for display
-fn to_pretty_index(ugly_index: usize) -> usize {
-    let div_by_8: f32 = ugly_index as f32 / 8.;
-    let floor: usize = (div_by_8).floor() as usize;
-    let pretty_index: usize = (floor) * 8 + 7 - ((div_by_8 % 1.) * 8.) as usize;
-    // println!("ugly_index:{}, pretty_index:{}", ugly_index, pretty_index);
-    return pretty_index;
-}
-
-// transform a bitboard-ordered-array to an array that can be used for display
-fn rearrange_array(old_array: std::str::Chars) -> [char; 64] {
-    let mut new_array: [char; 64] = ['0'; 64];
-    for (old_idx, itm) in old_array.into_iter().enumerate() {
-        if itm == '1' {
-            let new_idx: usize = to_pretty_index(old_idx);
-            new_array[new_idx] = '1';
-        }
-    }
-    return new_array;
-}
-
 // define objects and apply methods to those objects
-#[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
+// #[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
+#[derive(Debug, Clone, Copy)]
 pub struct BitBoard(pub u64);
 
 // add methods to the BitBoard struct
@@ -48,11 +27,24 @@ impl BitBoard {
         }
         return pretty_board;
     }
-
     // given an initial bitboard u64, flip the bit at position square_pos
     pub fn bit_flip(&self, square_pos: usize) -> BitBoard {
         let BitBoard(old_u6) = self;
         return BitBoard(old_u6 ^ (1 << (square_pos)));
+    }
+    // returns a vector with the position of all 1-bits
+    pub fn find_set_bits(&self) -> Vec<usize> {
+        let mut pos = vec![];
+        let &BitBoard(mut b_number) = self;
+        let mut index = 0;
+        while b_number != 0 {
+            if (b_number & 1) == 1 {
+                pos.push(index);
+            }
+            b_number = b_number >> 1;
+            index += 1;
+        }
+        return pos;
     }
 }
 
@@ -168,16 +160,15 @@ impl Position {
         let slashless = slash_regex.replace_all(fen, "");
         // split the piece data and meta data of the fen
         let fen_data_split: Vec<&str> = fen_split_regex.splitn(&slashless, 2).collect();
-        println!("{:?}", fen_data_split[0]);
 
         let mut square_count: usize = 0;
-        for i in fen_data_split[0].bytes() {
+        for fen_character in fen_data_split[0].bytes() {
             let div_by_8: f32 = square_count as f32 / 8.;
             let floor: usize = (div_by_8).floor() as usize;
             let square_idx: usize = (7 - floor) * 8 + ((div_by_8 % 1.) * 8.) as usize;
 
             // catch which piece bitboard needs to be updated
-            match i {
+            match fen_character {
                 0b110001 => (),                // 1, 1 is already added at each iteration
                 0b110010 => square_count += 1, // 2
                 0b110011 => square_count += 2, // 3
@@ -239,6 +230,27 @@ impl Position {
             square_count += 1;
         }
     }
+    // return all the legal moves of the position
+    pub fn moves(&self) -> Vec<&str> {
+        // pawns
+        // let Position {
+        //     bb_sides: [..],
+        //     bb_pieces: [[wpawn, ..], [..]],
+        // } = self;
+
+        let moves: Vec<&str> = vec!["e4", "e5"];
+        return moves;
+    }
+    // output -> vector of tuples: (piece color (0=white), piece id (0=pawn), piece position (a1=0))
+    pub fn get_pieces(&self, piece_color: usize) -> Vec<(usize, usize, usize)> {
+        let mut pieces: Vec<(usize, usize, usize)> = vec![];
+        for i in 0..6 {
+            for j in self.bb_pieces[piece_color][i].find_set_bits() {
+                pieces.push((piece_color, i, j));
+            }
+        }
+        return pieces;
+    }
 }
 
 // intuitive pointers to the position's sides bitboard
@@ -261,15 +273,24 @@ impl Pieces {
     pub const KING: usize = 5;
 }
 
-/*
-0000000000000000000000000000000000000000000000000000000000010000
-TO->
-00000000
-00000000
-00000000
-00000000
-00000000
-00000000
-00000000
-00001000
-*/
+// generally used functions for this file
+// transform the an index of a square in a bitboard to an index for display
+fn to_pretty_index(ugly_index: usize) -> usize {
+    let div_by_8: f32 = ugly_index as f32 / 8.;
+    let floor: usize = (div_by_8).floor() as usize;
+    let pretty_index: usize = (floor) * 8 + 7 - ((div_by_8 % 1.) * 8.) as usize;
+    // println!("ugly_index:{}, pretty_index:{}", ugly_index, pretty_index);
+    return pretty_index;
+}
+
+// transform a bitboard-ordered-array to an array that can be used for display
+fn rearrange_array(old_array: std::str::Chars) -> [char; 64] {
+    let mut new_array: [char; 64] = ['0'; 64];
+    for (old_idx, itm) in old_array.into_iter().enumerate() {
+        if itm == '1' {
+            let new_idx: usize = to_pretty_index(old_idx);
+            new_array[new_idx] = '1';
+        }
+    }
+    return new_array;
+}

@@ -30,7 +30,7 @@ fn main() {
 
     println!("All the white pawns:{}", white_pawns.pretty());
 
-    let mut test_starting_pos = chess_pos::Position {
+    let test_starting_pos = chess_pos::Position {
         ..chess_pos::Position::starting_pos()
     };
 
@@ -39,11 +39,15 @@ fn main() {
         test_starting_pos.pretty()
     );
 
-    test_starting_pos.load(starting_pos_fen);
-
     println!(
-        "To confirm that it's the same:{}",
-        test_starting_pos.pretty()
+        "The moves in the position are:\n{:?}",
+        test_starting_pos.moves()
     );
+
+    println!("the pieces are:{:?}", test_starting_pos.get_pieces(0));
 }
+// article about Gigantua, fastest move generator
 // https://www.codeproject.com/Articles/5313417/Worlds-Fastest-Bitboard-Chess-Movegenerator
+
+// explaining what to keep in mind when making a move generator
+// https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/
