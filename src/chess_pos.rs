@@ -10,41 +10,41 @@ pub struct BitBoard(pub u64);
 impl BitBoard {
     // creates a pretty string of the bitboard (for debugging purposes)
     pub fn pretty(&self) -> String {
-        let pretty = self.u64();
-        let formatted_bitboard = format!("{pretty:064b}");
+        let my_int = self.u64();
+        let formatted_bitboard = format!("{my_int:064b}");
         let pretty_array: [char; 64] = rearrange_array(formatted_bitboard.chars());
-        let mut pretty_board: String = String::new();
+        let mut pretty_string: String = String::new();
 
         for (idx, x) in pretty_array.into_iter().enumerate() {
             if idx % 8 == 0 {
-                pretty_board += "\n";
-                pretty_board += &(x as char).to_string();
-                pretty_board += " ";
+                pretty_string += "\n";
+                pretty_string += &(x as char).to_string();
+                pretty_string += " ";
             } else {
-                pretty_board += &(x as char).to_string();
-                pretty_board += " ";
+                pretty_string += &(x as char).to_string();
+                pretty_string += " ";
             }
         }
-        return pretty_board;
+        return pretty_string;
     }
     // given an initial bitboard u64, flip the bit at position square_pos
-    pub fn bit_flip(&self, square_pos: usize) -> BitBoard {
-        let BitBoard(old_u6) = self;
-        return BitBoard(old_u6 ^ (1 << (square_pos)));
+    pub fn bit_flip(&self, square_idx: usize) -> BitBoard {
+        let BitBoard(old_u64) = self;
+        return BitBoard(old_u64 ^ (1 << (square_idx)));
     }
     // returns a vector with the position of all 1-bits
     pub fn find_set_bits(&self) -> Vec<usize> {
-        let mut pos: Vec<usize> = vec![];
-        let &BitBoard(mut b_number) = self;
+        let mut set_bits: Vec<usize> = vec![];
+        let &BitBoard(mut my_int) = self;
         let mut index: usize = 0;
-        while b_number != 0 {
-            if (b_number & 1) == 1 {
-                pos.push(index);
+        while my_int != 0 {
+            if (my_int & 1) == 1 {
+                set_bits.push(index);
             }
-            b_number = b_number >> 1;
+            my_int = my_int >> 1;
             index += 1;
         }
-        return pos;
+        return set_bits;
     }
     // extract the u64 inside the BitBoard struct
     pub fn u64(&self) -> &u64 {
@@ -93,55 +93,41 @@ impl Position {
     pub fn pretty(&self) -> String {
         let mut pretty_array: [&str; 64] = ["x "; 64];
 
-        // destructuring the position, white is the bitboard for white, wpawn the bitboard for white pawns etc.
-        let Position {
-            bb_sides: [_white, _black],
-            bb_pieces:
-                [[wpawn, wbishop, wknight, wrook, wqueen, wking], [bpawn, bbishop, bknight, brook, bqueen, bking]],
-        } = self;
+        // 1. find all occupied squares for both colors -> so 2 variables
+        let white_occupies = self.bb_sides[0].find_set_bits();
+        let black_occupies = self.bb_sides[1].find_set_bits();
 
-        // array of all pieces bitboards
-        let all_pieces = [
-            wpawn, wbishop, wknight, wrook, wqueen, wking, bpawn, bbishop, bknight, brook, bqueen,
-            bking,
-        ];
-
-        let mut j: u8 = 0;
-
-        // loop over all the pieces bitboards
-        for i in all_pieces.iter() {
-            // destructure bitboard to get the unsigned 64-bit integer
-            let BitBoard(val) = i;
-
-            // loop over a stringified u64, get bit position and bit value
-            for k in format!("{val:064b}").to_string().char_indices() {
-                if k.1 == '1' {
-                    let string_representation: &str = match j {
-                        0 => "P ",   // wpawn
-                        6 => "p ",   // bpawn
-                        3 => "R ",   // wrook
-                        9 => "r ",   // brook
-                        1 => "B ",   // wbishop
-                        7 => "b ",   // bbishop
-                        2 => "N ",   // wknight
-                        8 => "n ",   // bknight
-                        5 => "K ",   // wking
-                        11 => "k ",  // bking
-                        4 => "Q ",   // wqueen
-                        10 => "q ",  // bqueen
-                        _ => "Err ", // in case of no match
-                    };
-                    // adjusted k.0 index to inverse board
-                    pretty_array[to_pretty_index(k.0)] = string_representation;
-                    // pretty_array[k.0] = string_representation;
-                }
-            }
-            j += 1;
+        // 2. loop over these found indices for both colors
+        for w_idx in white_occupies {
+            // 3. find what the piece is that occupies a found index
+            let found_piece = self.piece_id_finder(0, w_idx);
+            let pretty_piece = match found_piece {
+                (0, 0, _) => "P ",
+                (0, 1, _) => "B ",
+                (0, 2, _) => "N ",
+                (0, 3, _) => "R ",
+                (0, 4, _) => "Q ",
+                (0, 5, _) => "K ",
+                _ => "Err",
+            };
+            // 4. append this piece to the pretty_array
+            pretty_array[to_pretty_index(63 - w_idx)] = pretty_piece;
+        }
+        for b_idx in black_occupies {
+            let found_piece = self.piece_id_finder(1, b_idx);
+            let pretty_piece = match found_piece {
+                (1, 0, _) => "p ",
+                (1, 1, _) => "b ",
+                (1, 2, _) => "n ",
+                (1, 3, _) => "r ",
+                (1, 4, _) => "q ",
+                (1, 5, _) => "k ",
+                _ => "Err",
+            };
+            pretty_array[to_pretty_index(63 - b_idx)] = pretty_piece;
         }
 
-        // println!("{:#?}", pretty_array);
-
-        // transforming the pretty array into a pretty string
+        // 5. transform pretty_array into a string
         let mut pretty_pos: String = String::new();
         for i in 0..64 {
             if i % 8 == 0 {
@@ -168,6 +154,7 @@ impl Position {
 
         let mut square_count: usize = 0;
         for fen_character in fen_data_split[0].bytes() {
+            // find the square index of the analyzed character in the fen
             let div_by_8: f32 = square_count as f32 / 8.;
             let floor: usize = (div_by_8).floor() as usize;
             let square_idx: usize = (7 - floor) * 8 + ((div_by_8 % 1.) * 8.) as usize;
@@ -270,8 +257,7 @@ impl Position {
             piece_id = 2;
         } else if (self.bb_pieces[color][3].u64() >> idx) & 1 == 1 {
             piece_id = 3;
-        } else {
-            // (self.bb_pieces[color][4].u64() >> idx) & 1 == 1
+        } else if (self.bb_pieces[color][4].u64() >> idx) & 1 == 1 {
             piece_id = 4;
         } // 5 check not needed, default
         return (color, piece_id, idx);
