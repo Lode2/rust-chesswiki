@@ -40,11 +40,19 @@ fn main() {
     );
 
     println!(
+        "The white pieces are: (color,piece_id,square_idx)\n{:?}",
+        test_starting_pos.get_pieces(0)
+    );
+
+    println!(
         "The moves in the position are:\n{:?}",
         test_starting_pos.moves()
     );
 
-    println!("the pieces are:{:?}", test_starting_pos.get_pieces(0));
+    let my_test_int = 0b11100111;
+    // println!("my test int:{:#b}", my_test_int);
+    // println!("my test int:{:#b}", my_test_int >> 2);
+    println!("my test int:{:#b}", my_test_int);
 }
 // article about Gigantua, fastest move generator
 // https://www.codeproject.com/Articles/5313417/Worlds-Fastest-Bitboard-Chess-Movegenerator

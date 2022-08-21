@@ -10,13 +10,13 @@ pub struct BitBoard(pub u64);
 impl BitBoard {
     // creates a pretty string of the bitboard (for debugging purposes)
     pub fn pretty(&self) -> String {
-        let BitBoard(pretty) = self;
+        let pretty = self.u64();
         let formatted_bitboard = format!("{pretty:064b}");
         let pretty_array: [char; 64] = rearrange_array(formatted_bitboard.chars());
         let mut pretty_board: String = String::new();
 
-        for (i, x) in pretty_array.into_iter().enumerate() {
-            if i % 8 == 0 {
+        for (idx, x) in pretty_array.into_iter().enumerate() {
+            if idx % 8 == 0 {
                 pretty_board += "\n";
                 pretty_board += &(x as char).to_string();
                 pretty_board += " ";
@@ -34,9 +34,9 @@ impl BitBoard {
     }
     // returns a vector with the position of all 1-bits
     pub fn find_set_bits(&self) -> Vec<usize> {
-        let mut pos = vec![];
+        let mut pos: Vec<usize> = vec![];
         let &BitBoard(mut b_number) = self;
-        let mut index = 0;
+        let mut index: usize = 0;
         while b_number != 0 {
             if (b_number & 1) == 1 {
                 pos.push(index);
@@ -45,6 +45,11 @@ impl BitBoard {
             index += 1;
         }
         return pos;
+    }
+    // extract the u64 inside the BitBoard struct
+    pub fn u64(&self) -> &u64 {
+        let BitBoard(my_integer) = self;
+        return my_integer;
     }
 }
 
@@ -243,13 +248,33 @@ impl Position {
     }
     // output -> vector of tuples: (piece color (0=white), piece id (0=pawn), piece position (a1=0))
     pub fn get_pieces(&self, piece_color: usize) -> Vec<(usize, usize, usize)> {
+        let occupied_idx = self.bb_sides[piece_color].find_set_bits();
+
         let mut pieces: Vec<(usize, usize, usize)> = vec![];
-        for i in 0..6 {
-            for j in self.bb_pieces[piece_color][i].find_set_bits() {
-                pieces.push((piece_color, i, j));
-            }
+
+        // find which piece occupies the found square index
+        for idx in occupied_idx {
+            pieces.push(self.piece_id_finder(piece_color, idx));
         }
         return pieces;
+    }
+    // finds what piece occupies a provided square index
+    pub fn piece_id_finder(&self, color: usize, idx: usize) -> (usize, usize, usize) {
+        #[allow(unused_assignments)]
+        let mut piece_id: usize = 5; // standard
+        if (self.bb_pieces[color][0].u64() >> idx) & 1 == 1 {
+            piece_id = 0;
+        } else if (self.bb_pieces[color][1].u64() >> idx) & 1 == 1 {
+            piece_id = 1;
+        } else if (self.bb_pieces[color][2].u64() >> idx) & 1 == 1 {
+            piece_id = 2;
+        } else if (self.bb_pieces[color][3].u64() >> idx) & 1 == 1 {
+            piece_id = 3;
+        } else {
+            // (self.bb_pieces[color][4].u64() >> idx) & 1 == 1
+            piece_id = 4;
+        } // 5 check not needed, default
+        return (color, piece_id, idx);
     }
 }
 
