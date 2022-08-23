@@ -53,6 +53,14 @@ fn main() {
     // println!("my test int:{:#b}", my_test_int);
     // println!("my test int:{:#b}", my_test_int >> 2);
     println!("my test int:{:#b}", my_test_int);
+
+    let mut move_testing_position = chess_pos::Position {
+        ..chess_pos::Position::empty_pos()
+    };
+
+    move_testing_position.put_piece(3, 0, 14);
+
+    println!("{}", move_testing_position.pretty());
 }
 // article about Gigantua, fastest move generator
 // https://www.codeproject.com/Articles/5313417/Worlds-Fastest-Bitboard-Chess-Movegenerator

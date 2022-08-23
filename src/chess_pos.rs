@@ -18,19 +18,15 @@ impl BitBoard {
         for (idx, x) in pretty_array.into_iter().enumerate() {
             if idx % 8 == 0 {
                 pretty_string += "\n";
-                pretty_string += &(x as char).to_string();
-                pretty_string += " ";
-            } else {
-                pretty_string += &(x as char).to_string();
-                pretty_string += " ";
             }
+            pretty_string += &(x as char).to_string();
+            pretty_string += " ";
         }
         return pretty_string;
     }
     // given an initial bitboard u64, flip the bit at position square_pos
     pub fn bit_flip(&self, square_idx: usize) -> BitBoard {
-        let BitBoard(old_u64) = self;
-        return BitBoard(old_u64 ^ (1 << (square_idx)));
+        return BitBoard(self.u64() ^ (1 << (square_idx)));
     }
     // returns a vector with the position of all 1-bits
     pub fn find_set_bits(&self) -> Vec<usize> {
@@ -89,17 +85,41 @@ impl Position {
             ],
         };
     }
+    // execute this function to get an empty position
+    pub fn empty_pos() -> Position {
+        return Position {
+            bb_sides: [BitBoard(0), BitBoard(0)],
+            bb_pieces: [
+                [
+                    BitBoard(0),
+                    BitBoard(0),
+                    BitBoard(0),
+                    BitBoard(0),
+                    BitBoard(0),
+                    BitBoard(0),
+                ],
+                [
+                    BitBoard(0),
+                    BitBoard(0),
+                    BitBoard(0),
+                    BitBoard(0),
+                    BitBoard(0),
+                    BitBoard(0),
+                ],
+            ],
+        };
+    }
     // creates a pretty string of the position (for debugging purposes)
     pub fn pretty(&self) -> String {
         let mut pretty_array: [&str; 64] = ["x "; 64];
 
-        // 1. find all occupied squares for both colors -> so 2 variables
+        // 1. find all occupied squares for both colors -> so 2 vectors of indices
         let white_occupies = self.bb_sides[0].find_set_bits();
         let black_occupies = self.bb_sides[1].find_set_bits();
 
-        // 2. loop over these found indices for both colors
+        // 2. loop over the found indices for both colors
         for w_idx in white_occupies {
-            // 3. find what the piece is that occupies a found index
+            // 3. find what the piece is that occupies a found index and make readable
             let found_piece = self.piece_id_finder(0, w_idx);
             let pretty_piece = match found_piece {
                 (0, 0, _) => "P ",
@@ -110,9 +130,10 @@ impl Position {
                 (0, 5, _) => "K ",
                 _ => "Err",
             };
-            // 4. append this piece to the pretty_array
+            // 4. append this piece to pretty_array
             pretty_array[to_pretty_index(63 - w_idx)] = pretty_piece;
         }
+        // again for the black pieces
         for b_idx in black_occupies {
             let found_piece = self.piece_id_finder(1, b_idx);
             let pretty_piece = match found_piece {
@@ -138,12 +159,13 @@ impl Position {
 
         return pretty_pos;
     }
-    // load a fen position
+    // load a position using the FEN format
     pub fn load(&mut self, fen: &str) {
         // start with empty position
         self.bb_sides = [BitBoard(0); 2];
         self.bb_pieces = [[BitBoard(0); 6]; 2];
 
+        // 1. unpack the FEN into a string containing only the positional info
         let fen_split_regex: Regex = Regex::new(" ").unwrap();
         let slash_regex = Regex::new("/").unwrap();
 
@@ -152,6 +174,7 @@ impl Position {
         // split the piece data and meta data of the fen
         let fen_data_split: Vec<&str> = fen_split_regex.splitn(&slashless, 2).collect();
 
+        // 2. translate the FEN string into a piece on a bitboard
         let mut square_count: usize = 0;
         for fen_character in fen_data_split[0].bytes() {
             // find the square index of the analyzed character in the fen
@@ -222,15 +245,74 @@ impl Position {
             square_count += 1;
         }
     }
+    // put a piece on a desired square
+    pub fn put_piece(&mut self, piece: usize, piece_color: usize, square_idx: usize) {
+        let piece_info: [usize; 2] = [piece, piece_color];
+        match piece_info {
+            [0, 0] => {
+                self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_flip(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+            } // P
+            [3, 0] => {
+                self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_flip(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+            } // R
+            [2, 0] => {
+                self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_flip(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+            } // N
+            [1, 0] => {
+                self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_flip(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+            } // B
+            [5, 0] => {
+                self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_flip(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+            } // K
+            [4, 0] => {
+                self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_flip(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+            } // Q
+            [0, 1] => {
+                self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_flip(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+            } // p
+            [3, 1] => {
+                self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_flip(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+            } // r
+            [2, 1] => {
+                self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_flip(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+            } // n
+            [1, 1] => {
+                self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_flip(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+            } // b
+            [5, 1] => {
+                self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_flip(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+            } // k
+            [4, 1] => {
+                self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_flip(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+            } // q
+            _ => println!("No match found in the fen data!"),
+        };
+    }
     // return all the legal moves of the position
     pub fn moves(&self) -> Vec<&str> {
-        // pawns
-        // let Position {
-        //     bb_sides: [..],
-        //     bb_pieces: [[wpawn, ..], [..]],
-        // } = self;
+        // temporary, should be give in the function
+        // let current_move = 0; // 0=white, 1=black
+        let moves: Vec<&str> = vec![];
 
-        let moves: Vec<&str> = vec!["e4", "e5"];
+        // 1. find all the pieces from the team that has the current move
+        // let pieces = self.get_pieces(current_move);
+
+        // 2. register all the possible moves that every piece can make
+        // 3. remove all the illegal moves
+
+        // moves = vec!["e4", "e5"];
         return moves;
     }
     // output -> vector of tuples: (piece color (0=white), piece id (0=pawn), piece position (a1=0))
@@ -239,7 +321,7 @@ impl Position {
 
         let mut pieces: Vec<(usize, usize, usize)> = vec![];
 
-        // find which piece occupies the found square index
+        // append the piece that occupies a square
         for idx in occupied_idx {
             pieces.push(self.piece_id_finder(piece_color, idx));
         }
@@ -264,7 +346,7 @@ impl Position {
     }
 }
 
-// intuitive pointers to the position's sides bitboard
+// intuitive pointers to the position's sides bitboards
 pub struct Sides;
 #[allow(dead_code)]
 impl Sides {
@@ -272,7 +354,7 @@ impl Sides {
     pub const BLACK: usize = 1;
 }
 
-// intuitive pointers to the position's pieces bitboard
+// intuitive pointers to the position's pieces bitboards
 pub struct Pieces;
 #[allow(dead_code)]
 impl Pieces {
@@ -290,7 +372,6 @@ fn to_pretty_index(ugly_index: usize) -> usize {
     let div_by_8: f32 = ugly_index as f32 / 8.;
     let floor: usize = (div_by_8).floor() as usize;
     let pretty_index: usize = (floor) * 8 + 7 - ((div_by_8 % 1.) * 8.) as usize;
-    // println!("ugly_index:{}, pretty_index:{}", ugly_index, pretty_index);
     return pretty_index;
 }
 
