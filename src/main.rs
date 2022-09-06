@@ -30,7 +30,7 @@ fn main() {
 
     println!("All the white pawns:{}", white_pawns.pretty());
 
-    let test_starting_pos = chess_pos::Position {
+    let mut test_starting_pos = chess_pos::Position {
         ..chess_pos::Position::starting_pos()
     };
 
@@ -61,6 +61,10 @@ fn main() {
     move_testing_position.put_piece(3, 0, 14);
 
     println!("{}", move_testing_position.pretty());
+
+    test_starting_pos.remove_piece(53);
+
+    println!("{}", test_starting_pos.pretty());
 }
 // article about Gigantua, fastest move generator
 // https://www.codeproject.com/Articles/5313417/Worlds-Fastest-Bitboard-Chess-Movegenerator

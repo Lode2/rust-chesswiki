@@ -24,9 +24,17 @@ impl BitBoard {
         }
         return pretty_string;
     }
-    // given an initial bitboard u64, flip the bit at position square_pos
+    // given an initial bitboard u64, flip the bit at position square_idx
     pub fn bit_flip(&self, square_idx: usize) -> BitBoard {
-        return BitBoard(self.u64() ^ (1 << (square_idx)));
+        return BitBoard(self.u64() ^ (1 << square_idx));
+    }
+    // set a bit (change to 1) at position square_idx
+    pub fn bit_set(&self, square_idx: usize) -> BitBoard {
+        return BitBoard(self.u64() | (1 << square_idx));
+    }
+    // unset a bit (change to 0) at position square_idx
+    pub fn bit_unset(&self, square_idx: usize) -> BitBoard {
+        return BitBoard(self.u64() & !(1 << square_idx));
     }
     // returns a vector with the position of all 1-bits
     pub fn find_set_bits(&self) -> Vec<usize> {
@@ -250,55 +258,75 @@ impl Position {
         let piece_info: [usize; 2] = [piece, piece_color];
         match piece_info {
             [0, 0] => {
-                self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_flip(square_idx);
-                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_set(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
             } // P
             [3, 0] => {
-                self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_flip(square_idx);
-                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_set(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
             } // R
             [2, 0] => {
-                self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_flip(square_idx);
-                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_set(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
             } // N
             [1, 0] => {
-                self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_flip(square_idx);
-                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_set(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
             } // B
             [5, 0] => {
-                self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_flip(square_idx);
-                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_set(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
             } // K
             [4, 0] => {
-                self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_flip(square_idx);
-                self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_set(square_idx);
+                self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
             } // Q
             [0, 1] => {
-                self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_flip(square_idx);
-                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_set(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
             } // p
             [3, 1] => {
-                self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_flip(square_idx);
-                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_set(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
             } // r
             [2, 1] => {
-                self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_flip(square_idx);
-                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_set(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
             } // n
             [1, 1] => {
-                self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_flip(square_idx);
-                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_set(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
             } // b
             [5, 1] => {
-                self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_flip(square_idx);
-                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_set(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
             } // k
             [4, 1] => {
-                self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_flip(square_idx);
-                self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_set(square_idx);
+                self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
             } // q
             _ => println!("No match found in the fen data!"),
         };
+    }
+    // clear a square of a piece
+    pub fn remove_piece(&mut self, square_idx: usize) {
+        // clear all white pieces off the square
+        self.bb_sides[0] = self.bb_sides[0].bit_unset(square_idx);
+        self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_unset(square_idx);
+        self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_unset(square_idx);
+        self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_unset(square_idx);
+        self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_unset(square_idx);
+        self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_unset(square_idx);
+        self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_unset(square_idx);
+
+        // clear all black pieces off the square
+        self.bb_sides[1] = self.bb_sides[1].bit_unset(square_idx);
+        self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_unset(square_idx);
+        self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_unset(square_idx);
+        self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_unset(square_idx);
+        self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_unset(square_idx);
+        self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_unset(square_idx);
+        self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_unset(square_idx);
     }
     // return all the legal moves of the position
     pub fn moves(&self) -> Vec<&str> {
