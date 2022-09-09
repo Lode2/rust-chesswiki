@@ -3,23 +3,25 @@ mod chess;
 mod move_gen;
 
 // use the chess_pos.rs file and access the Debug trait
-use chess::chess_pos;
-use chess_pos::Debug;
+use crate::chess::structs::BitBoard;
+use crate::chess::structs::Position;
+use crate::chess::structs_methods;
+use crate::structs_methods::Debug;
 
 fn main() {
     let starting_pos_fen: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-    let mut my_pos: chess_pos::Position = chess_pos::Position {
-        bb_sides: [chess_pos::BitBoard(0); 2],
-        bb_pieces: [[chess_pos::BitBoard(0); 6]; 2],
+    let mut my_pos: Position = Position {
+        bb_sides: [BitBoard(0); 2],
+        bb_pieces: [[BitBoard(0); 6]; 2],
     };
     my_pos.load(starting_pos_fen);
 
     println!("Pretty Starting Position:{}", my_pos.pretty());
 
     // get the bitboard with all the white queens
-    let white_queens: chess_pos::BitBoard =
-        my_pos.bb_pieces[chess_pos::Sides::WHITE][chess_pos::Pieces::QUEEN];
+    let white_queens: BitBoard =
+        my_pos.bb_pieces[structs_methods::Sides::WHITE][structs_methods::Pieces::QUEEN];
 
     println!("All the white queens:{}", white_queens.pretty());
 
@@ -31,13 +33,13 @@ fn main() {
     println!("Loaded example position:{}", my_pos.pretty());
 
     // get the bitboard with all the white pawns
-    let white_pawns: chess_pos::BitBoard =
-        my_pos.bb_pieces[chess_pos::Sides::WHITE][chess_pos::Pieces::PAWN];
+    let white_pawns: BitBoard =
+        my_pos.bb_pieces[structs_methods::Sides::WHITE][structs_methods::Pieces::PAWN];
 
     println!("All the white pawns:{}", white_pawns.pretty());
 
-    let mut test_starting_pos = chess_pos::Position {
-        ..chess_pos::Position::starting_pos()
+    let mut test_starting_pos = Position {
+        ..Position::starting_pos()
     };
 
     println!(
@@ -60,8 +62,8 @@ fn main() {
     // println!("my test int:{:#b}", my_test_int >> 2);
     println!("my test int:{:#b}", my_test_int);
 
-    let mut move_testing_position = chess_pos::Position {
-        ..chess_pos::Position::empty_pos()
+    let mut move_testing_position = Position {
+        ..Position::empty_pos()
     };
 
     move_testing_position.put_piece(3, 0, 14);

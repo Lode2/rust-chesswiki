@@ -1,11 +1,15 @@
-// file containing bitboard and position struct
-use crate::move_gen::get_moves::moves as get_moves;
-use regex::Regex;
+// file containing methods for the structs in structs.rs
 
-// define objects and apply methods to those objects
-// #[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
-#[derive(Debug, Clone, Copy)]
-pub struct BitBoard(pub u64);
+// used outside this file
+pub use crate::chess::structs::BitBoard;
+pub use crate::chess::structs::Debug;
+pub use crate::chess::structs::Pieces;
+pub use crate::chess::structs::Position;
+pub use crate::chess::structs::Sides;
+
+// not used outside this file
+use crate::move_gen;
+use regex::Regex;
 
 // add methods to the BitBoard struct
 impl BitBoard {
@@ -42,25 +46,6 @@ impl BitBoard {
     }
 }
 
-// #[derive(Debug)]
-// pub struct State {
-//     castling_rights: CastlingRights,
-//     en_passant_square: Option<Square>,
-//     half_move_counter: u8,
-//     stm: usize,
-// }
-
-#[derive(Debug)]
-pub struct Position {
-    /// Board for each side
-    pub bb_sides: [BitBoard; 2],
-    // BitBoards for all pieces and each side
-    pub bb_pieces: [[BitBoard; 6]; 2],
-    // pub state: State,
-}
-pub trait Debug {
-    fn pretty(&self) -> String;
-}
 impl Debug for Position {
     // creates a pretty string of the position (for debugging purposes)
     fn pretty(&self) -> String {
@@ -331,7 +316,7 @@ impl Position {
     }
     // return all the legal moves of the position
     pub fn moves(&self) -> Vec<&str> {
-        return get_moves(&self);
+        return move_gen::get_moves::moves(&self, 0);
     }
     // output -> vector of tuples: (piece color (0=white), piece id (0=pawn), piece position (a1=0))
     pub fn get_pieces(&self, piece_color: usize) -> Vec<(usize, usize, usize)> {
@@ -364,16 +349,12 @@ impl Position {
     }
 }
 
-// intuitive pointers to the position's sides bitboards
-pub struct Sides;
 #[allow(dead_code)]
 impl Sides {
     pub const WHITE: usize = 0;
     pub const BLACK: usize = 1;
 }
 
-// intuitive pointers to the position's pieces bitboards
-pub struct Pieces;
 #[allow(dead_code)]
 impl Pieces {
     pub const PAWN: usize = 0;
