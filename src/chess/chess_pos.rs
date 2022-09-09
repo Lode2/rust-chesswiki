@@ -1,4 +1,5 @@
 // file containing bitboard and position struct
+use crate::move_gen::get_moves::moves as get_moves;
 use regex::Regex;
 
 // define objects and apply methods to those objects
@@ -330,22 +331,7 @@ impl Position {
     }
     // return all the legal moves of the position
     pub fn moves(&self) -> Vec<&str> {
-        // temporary, should be given in the function
-        let team_move = 0; // 0=white, 1=black
-        let mut pseudo_legal_move: Vec<&str> = vec![];
-        let mut moves: Vec<&str> = vec![];
-
-        // 1. find all the pieces from the team that has the current move
-        let pieces = self.get_pieces(team_move);
-        println!("{:?}", pieces);
-        // 2. register all the pseudo-legal moves that every piece can make
-        for i in pieces.iter() {
-            pseudo_legal_move.push("hi");
-        }
-        // 3. remove all the illegal moves
-
-        // moves = vec!["e4", "e5"];
-        return moves;
+        return get_moves(&self);
     }
     // output -> vector of tuples: (piece color (0=white), piece id (0=pawn), piece position (a1=0))
     pub fn get_pieces(&self, piece_color: usize) -> Vec<(usize, usize, usize)> {

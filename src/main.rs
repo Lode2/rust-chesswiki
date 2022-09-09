@@ -1,4 +1,9 @@
-mod chess_pos;
+// declare all the modules for the crate
+mod chess;
+mod move_gen;
+
+// use the chess_pos.rs file and access the Debug trait
+use chess::chess_pos;
 use chess_pos::Debug;
 
 fn main() {
