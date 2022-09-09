@@ -1,4 +1,5 @@
 mod chess_pos;
+use chess_pos::Debug;
 
 fn main() {
     let starting_pos_fen: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

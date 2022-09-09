@@ -8,26 +8,10 @@ pub struct BitBoard(pub u64);
 
 // add methods to the BitBoard struct
 impl BitBoard {
-    // creates a pretty string of the bitboard (for debugging purposes)
-    pub fn pretty(&self) -> String {
-        let my_int = self.u64();
-        let formatted_bitboard = format!("{my_int:064b}");
-        let pretty_array: [char; 64] = rearrange_array(formatted_bitboard.chars());
-        let mut pretty_string: String = String::new();
-
-        for (idx, x) in pretty_array.into_iter().enumerate() {
-            if idx % 8 == 0 {
-                pretty_string += "\n";
-            }
-            pretty_string += &(x as char).to_string();
-            pretty_string += " ";
-        }
-        return pretty_string;
-    }
-    // given an initial bitboard u64, flip the bit at position square_idx
-    pub fn bit_flip(&self, square_idx: usize) -> BitBoard {
-        return BitBoard(self.u64() ^ (1 << square_idx));
-    }
+    // given an initial bitboard u64, flip the bit at position square_idx, not necessary due to bit_set and bit_unset
+    // pub fn bit_flip(&self, square_idx: usize) -> BitBoard {
+    //     return BitBoard(self.u64() ^ (1 << square_idx));
+    // }
     // set a bit (change to 1) at position square_idx
     pub fn bit_set(&self, square_idx: usize) -> BitBoard {
         return BitBoard(self.u64() | (1 << square_idx));
@@ -57,68 +41,28 @@ impl BitBoard {
     }
 }
 
+// #[derive(Debug)]
+// pub struct State {
+//     castling_rights: CastlingRights,
+//     en_passant_square: Option<Square>,
+//     half_move_counter: u8,
+//     stm: usize,
+// }
+
 #[derive(Debug)]
 pub struct Position {
     /// Board for each side
     pub bb_sides: [BitBoard; 2],
     // BitBoards for all pieces and each side
     pub bb_pieces: [[BitBoard; 6]; 2],
+    // pub state: State,
 }
-
-impl Position {
-    // execute this function to get the chess starting position
-    pub fn starting_pos() -> Position {
-        return Position {
-            bb_sides: [
-                BitBoard(0b0000000000000000000000000000000000000000000000001111111111111111),
-                BitBoard(0b1111111111111111000000000000000000000000000000000000000000000000),
-            ],
-            bb_pieces: [
-                [
-                    BitBoard(0b0000000000000000000000000000000000000000000000001111111100000000),
-                    BitBoard(0b0000000000000000000000000000000000000000000000000000000000100100),
-                    BitBoard(0b0000000000000000000000000000000000000000000000000000000001000010),
-                    BitBoard(0b0000000000000000000000000000000000000000000000000000000010000001),
-                    BitBoard(0b0000000000000000000000000000000000000000000000000000000000001000),
-                    BitBoard(0b0000000000000000000000000000000000000000000000000000000000010000),
-                ],
-                [
-                    BitBoard(0b0000000011111111000000000000000000000000000000000000000000000000),
-                    BitBoard(0b0010010000000000000000000000000000000000000000000000000000000000),
-                    BitBoard(0b0100001000000000000000000000000000000000000000000000000000000000),
-                    BitBoard(0b1000000100000000000000000000000000000000000000000000000000000000),
-                    BitBoard(0b0000100000000000000000000000000000000000000000000000000000000000),
-                    BitBoard(0b0001000000000000000000000000000000000000000000000000000000000000),
-                ],
-            ],
-        };
-    }
-    // execute this function to get an empty position
-    pub fn empty_pos() -> Position {
-        return Position {
-            bb_sides: [BitBoard(0), BitBoard(0)],
-            bb_pieces: [
-                [
-                    BitBoard(0),
-                    BitBoard(0),
-                    BitBoard(0),
-                    BitBoard(0),
-                    BitBoard(0),
-                    BitBoard(0),
-                ],
-                [
-                    BitBoard(0),
-                    BitBoard(0),
-                    BitBoard(0),
-                    BitBoard(0),
-                    BitBoard(0),
-                    BitBoard(0),
-                ],
-            ],
-        };
-    }
+pub trait Debug {
+    fn pretty(&self) -> String;
+}
+impl Debug for Position {
     // creates a pretty string of the position (for debugging purposes)
-    pub fn pretty(&self) -> String {
+    fn pretty(&self) -> String {
         let mut pretty_array: [&str; 64] = ["x "; 64];
 
         // 1. find all occupied squares for both colors -> so 2 vectors of indices
@@ -167,6 +111,62 @@ impl Position {
 
         return pretty_pos;
     }
+}
+
+impl Debug for BitBoard {
+    // creates a pretty string of the bitboard (for debugging purposes)
+    fn pretty(&self) -> String {
+        let my_int = self.u64();
+        let formatted_bitboard = format!("{my_int:064b}");
+        let pretty_array: [char; 64] = rearrange_array(formatted_bitboard.chars());
+        let mut pretty_string: String = String::new();
+
+        for (idx, x) in pretty_array.into_iter().enumerate() {
+            if idx % 8 == 0 {
+                pretty_string += "\n";
+            }
+            pretty_string += &(x as char).to_string();
+            pretty_string += " ";
+        }
+        return pretty_string;
+    }
+}
+
+impl Position {
+    // execute this function to get the chess starting position
+    pub fn starting_pos() -> Position {
+        return Position {
+            bb_sides: [
+                BitBoard(0b0000000000000000000000000000000000000000000000001111111111111111),
+                BitBoard(0b1111111111111111000000000000000000000000000000000000000000000000),
+            ],
+            bb_pieces: [
+                [
+                    BitBoard(0b0000000000000000000000000000000000000000000000001111111100000000),
+                    BitBoard(0b0000000000000000000000000000000000000000000000000000000000100100),
+                    BitBoard(0b0000000000000000000000000000000000000000000000000000000001000010),
+                    BitBoard(0b0000000000000000000000000000000000000000000000000000000010000001),
+                    BitBoard(0b0000000000000000000000000000000000000000000000000000000000001000),
+                    BitBoard(0b0000000000000000000000000000000000000000000000000000000000010000),
+                ],
+                [
+                    BitBoard(0b0000000011111111000000000000000000000000000000000000000000000000),
+                    BitBoard(0b0010010000000000000000000000000000000000000000000000000000000000),
+                    BitBoard(0b0100001000000000000000000000000000000000000000000000000000000000),
+                    BitBoard(0b1000000100000000000000000000000000000000000000000000000000000000),
+                    BitBoard(0b0000100000000000000000000000000000000000000000000000000000000000),
+                    BitBoard(0b0001000000000000000000000000000000000000000000000000000000000000),
+                ],
+            ],
+        };
+    }
+    // execute this function to get an empty position
+    pub fn empty_pos() -> Position {
+        return Position {
+            bb_sides: [BitBoard(0); 2],
+            bb_pieces: [[BitBoard(0); 6]; 2],
+        };
+    }
     // load a position using the FEN format
     pub fn load(&mut self, fen: &str) {
         // start with empty position
@@ -201,52 +201,52 @@ impl Position {
                 0b110111 => square_count += 6, // 7
                 0b111000 => square_count += 7, // 8
                 0b1010000 => {
-                    self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_flip(square_idx);
-                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                    self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_set(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
                 } // P
                 0b1010010 => {
-                    self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_flip(square_idx);
-                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                    self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_set(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
                 } // R
                 0b1001110 => {
-                    self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_flip(square_idx);
-                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                    self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_set(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
                 } // N
                 0b1000010 => {
-                    self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_flip(square_idx);
-                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                    self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_set(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
                 } // B
                 0b1001011 => {
-                    self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_flip(square_idx);
-                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                    self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_set(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
                 } // K
                 0b1010001 => {
-                    self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_flip(square_idx);
-                    self.bb_sides[0] = self.bb_sides[0].bit_flip(square_idx);
+                    self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_set(square_idx);
+                    self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
                 } // Q
                 0b1110000 => {
-                    self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_flip(square_idx);
-                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                    self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_set(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
                 } // p
                 0b1110010 => {
-                    self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_flip(square_idx);
-                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                    self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_set(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
                 } // r
                 0b1101110 => {
-                    self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_flip(square_idx);
-                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                    self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_set(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
                 } // n
                 0b1100010 => {
-                    self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_flip(square_idx);
-                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                    self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_set(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
                 } // b
                 0b1101011 => {
-                    self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_flip(square_idx);
-                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                    self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_set(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
                 } // k
                 0b1110001 => {
-                    self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_flip(square_idx);
-                    self.bb_sides[1] = self.bb_sides[1].bit_flip(square_idx);
+                    self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_set(square_idx);
+                    self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
                 } // q
                 _ => println!("No match found in the fen data!"),
             };
@@ -330,14 +330,18 @@ impl Position {
     }
     // return all the legal moves of the position
     pub fn moves(&self) -> Vec<&str> {
-        // temporary, should be give in the function
-        // let current_move = 0; // 0=white, 1=black
-        let moves: Vec<&str> = vec![];
+        // temporary, should be given in the function
+        let team_move = 0; // 0=white, 1=black
+        let mut pseudo_legal_move: Vec<&str> = vec![];
+        let mut moves: Vec<&str> = vec![];
 
         // 1. find all the pieces from the team that has the current move
-        // let pieces = self.get_pieces(current_move);
-
-        // 2. register all the possible moves that every piece can make
+        let pieces = self.get_pieces(team_move);
+        println!("{:?}", pieces);
+        // 2. register all the pseudo-legal moves that every piece can make
+        for i in pieces.iter() {
+            pseudo_legal_move.push("hi");
+        }
         // 3. remove all the illegal moves
 
         // moves = vec!["e4", "e5"];
