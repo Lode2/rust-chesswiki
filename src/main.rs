@@ -1,6 +1,9 @@
+#![allow(dead_code)]
 // declare all the modules for the crate
 mod chess;
 mod move_gen;
+
+use structs_methods::State;
 
 // use the chess_pos.rs file and access the Debug trait
 use crate::chess::structs::BitBoard;
@@ -14,6 +17,13 @@ fn main() {
     let mut my_pos: Position = Position {
         bb_sides: [BitBoard(0); 2],
         bb_pieces: [[BitBoard(0); 6]; 2],
+        state: State {
+            stm: 0,
+            castling_rights: 0b00001111,
+            en_passant_square: None,
+            half_move_counter: 0,
+            full_move_counter: 0,
+        },
     };
     my_pos.load(starting_pos_fen);
 

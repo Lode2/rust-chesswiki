@@ -1,13 +1,14 @@
 // file containing methods for the structs in structs.rs
 
-// used outside this file
+// functionality in this file that is used outside this file
 pub use crate::chess::structs::BitBoard;
 pub use crate::chess::structs::Debug;
 pub use crate::chess::structs::Pieces;
 pub use crate::chess::structs::Position;
 pub use crate::chess::structs::Sides;
+pub use crate::chess::structs::State;
 
-// not used outside this file
+// imports that are not called in this file from other files
 use crate::move_gen;
 use regex::Regex;
 
@@ -43,6 +44,25 @@ impl BitBoard {
     pub fn u64(&self) -> &u64 {
         let BitBoard(my_integer) = self;
         return my_integer;
+    }
+}
+
+impl Debug for BitBoard {
+    // creates a pretty string of the bitboard (for debugging purposes)
+    fn pretty(&self) -> String {
+        let my_int = self.u64();
+        let formatted_bitboard = format!("{my_int:064b}");
+        let pretty_array: [char; 64] = rearrange_array(formatted_bitboard.chars());
+        let mut pretty_string: String = String::new();
+
+        for (idx, x) in pretty_array.into_iter().enumerate() {
+            if idx % 8 == 0 {
+                pretty_string += "\n";
+            }
+            pretty_string += &(x as char).to_string();
+            pretty_string += " ";
+        }
+        return pretty_string;
     }
 }
 
@@ -95,26 +115,24 @@ impl Debug for Position {
             pretty_pos += pretty_array[i];
         }
 
+        // 6. add the state data
+        pretty_pos += "\nSide to move (0 = w, 1 = b):";
+        pretty_pos += format!("{:08b}", self.state.stm).as_str();
+        pretty_pos += "\nCastling allowed (xxxxKQkq): ";
+        pretty_pos += format!("{:08b}", self.state.castling_rights).as_str();
+        pretty_pos += "\nEn passant square:";
+        let state_eps = if self.state.en_passant_square == None {
+            "No en passant square".to_owned()
+        } else {
+            format!("{:08b}", self.state.en_passant_square.unwrap())
+        };
+        pretty_pos.push_str(&state_eps);
+        pretty_pos += "\nHalfmove counter (half moves since last pawn push): ";
+        pretty_pos += &self.state.half_move_counter.to_string();
+        pretty_pos += "\nFull moves: ";
+        pretty_pos += &self.state.full_move_counter.to_string();
+
         return pretty_pos;
-    }
-}
-
-impl Debug for BitBoard {
-    // creates a pretty string of the bitboard (for debugging purposes)
-    fn pretty(&self) -> String {
-        let my_int = self.u64();
-        let formatted_bitboard = format!("{my_int:064b}");
-        let pretty_array: [char; 64] = rearrange_array(formatted_bitboard.chars());
-        let mut pretty_string: String = String::new();
-
-        for (idx, x) in pretty_array.into_iter().enumerate() {
-            if idx % 8 == 0 {
-                pretty_string += "\n";
-            }
-            pretty_string += &(x as char).to_string();
-            pretty_string += " ";
-        }
-        return pretty_string;
     }
 }
 
@@ -144,6 +162,13 @@ impl Position {
                     BitBoard(0b0001000000000000000000000000000000000000000000000000000000000000),
                 ],
             ],
+            state: State {
+                stm: 0,                      // side to move
+                castling_rights: 0b00001111, // all castling right available
+                en_passant_square: None,
+                half_move_counter: 0,
+                full_move_counter: 0,
+            },
         };
     }
     // execute this function to get an empty position
@@ -151,6 +176,13 @@ impl Position {
         return Position {
             bb_sides: [BitBoard(0); 2],
             bb_pieces: [[BitBoard(0); 6]; 2],
+            state: State {
+                stm: 0,
+                castling_rights: 0b00000000,
+                en_passant_square: None,
+                half_move_counter: 0,
+                full_move_counter: 0,
+            },
         };
     }
     // load a position using the FEN format
@@ -160,13 +192,14 @@ impl Position {
         self.bb_pieces = [[BitBoard(0); 6]; 2];
 
         // 1. unpack the FEN into a string containing only the positional info
-        let fen_split_regex: Regex = Regex::new(" ").unwrap();
-        let slash_regex = Regex::new("/").unwrap();
+        // define regex's
+        let split_whitespace: Regex = Regex::new(" ").unwrap();
+        let split_slash: Regex = Regex::new("/").unwrap();
 
         // remove the slashes from the piece data of the fen
-        let slashless = slash_regex.replace_all(fen, "");
+        let slashless = split_slash.replace_all(fen, "");
         // split the piece data and meta data of the fen
-        let fen_data_split: Vec<&str> = fen_split_regex.splitn(&slashless, 2).collect();
+        let fen_data_split: Vec<&str> = split_whitespace.splitn(&slashless, 2).collect();
 
         // 2. translate the FEN string into a piece on a bitboard
         let mut square_count: usize = 0;
@@ -238,6 +271,119 @@ impl Position {
             };
             square_count += 1;
         }
+
+        // 3. Add the meta data from the FEN to State in the Position struct
+        let fen_meta_data: Vec<&str> = split_whitespace.split(fen_data_split[1]).collect();
+
+        // side to move
+        let state_stm: usize = if fen_meta_data[0] == "w" { 0 } else { 1 };
+
+        // castling rights
+        let mut state_castling_rights: u8 = 0b00000000;
+        if fen_meta_data[1] != "-" {
+            if Regex::new("K").unwrap().is_match(fen_meta_data[1]) {
+                state_castling_rights = state_castling_rights | (1 << 3)
+            }
+            if Regex::new("Q").unwrap().is_match(fen_meta_data[1]) {
+                state_castling_rights = state_castling_rights | (1 << 2)
+            }
+            if Regex::new("k").unwrap().is_match(fen_meta_data[1]) {
+                state_castling_rights = state_castling_rights | (1 << 1)
+            }
+            if Regex::new("Q").unwrap().is_match(fen_meta_data[1]) {
+                state_castling_rights = state_castling_rights | (1 << 0)
+            }
+        }
+
+        let state_en_passant_square: Option<u8> = if fen_meta_data[2] == "-" {
+            None
+        } else {
+            match fen_meta_data[2] {
+                "a1" => Some(0),
+                "b1" => Some(1),
+                "c1" => Some(2),
+                "d1" => Some(3),
+                "e1" => Some(4),
+                "f1" => Some(5),
+                "g1" => Some(6),
+                "h1" => Some(7),
+
+                "a2" => Some(8),
+                "b2" => Some(9),
+                "c2" => Some(10),
+                "d2" => Some(11),
+                "e2" => Some(12),
+                "f2" => Some(13),
+                "g2" => Some(14),
+                "h2" => Some(15),
+
+                "a3" => Some(16),
+                "b3" => Some(17),
+                "c3" => Some(18),
+                "d3" => Some(19),
+                "e3" => Some(20),
+                "f3" => Some(21),
+                "g3" => Some(22),
+                "h3" => Some(23),
+
+                "a4" => Some(24),
+                "b4" => Some(25),
+                "c4" => Some(26),
+                "d4" => Some(27),
+                "e4" => Some(28),
+                "f4" => Some(29),
+                "g4" => Some(30),
+                "h4" => Some(31),
+
+                "a5" => Some(32),
+                "b5" => Some(33),
+                "c5" => Some(34),
+                "d5" => Some(35),
+                "e5" => Some(36),
+                "f5" => Some(37),
+                "g5" => Some(38),
+                "h5" => Some(39),
+
+                "a6" => Some(40),
+                "b6" => Some(41),
+                "c6" => Some(42),
+                "d6" => Some(43),
+                "e6" => Some(44),
+                "f6" => Some(45),
+                "g6" => Some(46),
+                "h6" => Some(47),
+
+                "a7" => Some(48),
+                "b7" => Some(49),
+                "c7" => Some(50),
+                "d7" => Some(51),
+                "e7" => Some(52),
+                "f7" => Some(53),
+                "g7" => Some(54),
+                "h7" => Some(55),
+
+                "a8" => Some(56),
+                "b8" => Some(57),
+                "c8" => Some(58),
+                "d8" => Some(59),
+                "e8" => Some(60),
+                "f8" => Some(61),
+                "g8" => Some(62),
+                "h8" => Some(63),
+                _ => None,
+            }
+        };
+
+        // add to state
+        self.state = State {
+            stm: state_stm,
+            castling_rights: state_castling_rights,
+            en_passant_square: state_en_passant_square,
+            half_move_counter: fen_meta_data[3].parse().unwrap(),
+            full_move_counter: fen_meta_data[4].parse().unwrap(),
+        };
+
+        println!("{:?}", fen_meta_data);
     }
     // put a piece on a desired square
     pub fn put_piece(&mut self, piece: usize, piece_color: usize, square_idx: usize) {
