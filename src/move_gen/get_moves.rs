@@ -36,6 +36,6 @@ TODO:
             1. load the state from the FEN: I think this works now. UPDATE: It does!
             2. check for allowed FEN
         pretty method: print the state data. UPDATE: Works!
-        put_piece method: if placing rook on home square, should castling rights return?
-        remove_piece method: same as put_piece but reversed
+        put_piece method: if placing rook on home square, should castling rights return? WORKS.
+        remove_piece method: same as put_piece but reversed. WORKS.
 */

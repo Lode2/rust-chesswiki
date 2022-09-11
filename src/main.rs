@@ -76,11 +76,12 @@ fn main() {
         ..Position::empty_pos()
     };
 
-    move_testing_position.put_piece(3, 0, 14);
+    move_testing_position.put_piece(5, 1, 60);
+    move_testing_position.put_piece(3, 1, 56);
 
     println!("{}", move_testing_position.pretty());
 
-    test_starting_pos.remove_piece(53);
+    test_starting_pos.remove_piece(7);
 
     println!("{}", test_starting_pos.pretty());
 }

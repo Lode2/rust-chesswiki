@@ -396,6 +396,7 @@ impl Position {
             [3, 0] => {
                 self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_set(square_idx);
                 self.bb_sides[0] = self.bb_sides[0].bit_set(square_idx);
+                self.state.castling_rights = update_state_castling(self, 0, square_idx);
             } // R
             [2, 0] => {
                 self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_set(square_idx);
@@ -420,6 +421,7 @@ impl Position {
             [3, 1] => {
                 self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_set(square_idx);
                 self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
+                self.state.castling_rights = update_state_castling(self, 1, square_idx);
             } // r
             [2, 1] => {
                 self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_set(square_idx);
@@ -442,27 +444,27 @@ impl Position {
     }
     // clear a square of a piece
     pub fn remove_piece(&mut self, square_idx: usize) {
-        // clear all white pieces off the square
-        self.bb_sides[0] = self.bb_sides[0].bit_unset(square_idx);
-        self.bb_pieces[0][0] = self.bb_pieces[0][0].bit_unset(square_idx);
-        self.bb_pieces[0][1] = self.bb_pieces[0][1].bit_unset(square_idx);
-        self.bb_pieces[0][2] = self.bb_pieces[0][2].bit_unset(square_idx);
-        self.bb_pieces[0][3] = self.bb_pieces[0][3].bit_unset(square_idx);
-        self.bb_pieces[0][4] = self.bb_pieces[0][4].bit_unset(square_idx);
-        self.bb_pieces[0][5] = self.bb_pieces[0][5].bit_unset(square_idx);
+        // find piece color
+        let color = if (self.bb_sides[0].u64() >> square_idx) & 1 == 1 {
+            0
+        } else {
+            1
+        };
+        // clear all pieces of the found color of the square
+        self.bb_sides[color] = self.bb_sides[color].bit_unset(square_idx);
+        self.bb_pieces[color][0] = self.bb_pieces[color][0].bit_unset(square_idx);
+        self.bb_pieces[color][1] = self.bb_pieces[color][1].bit_unset(square_idx);
+        self.bb_pieces[color][2] = self.bb_pieces[color][2].bit_unset(square_idx);
+        self.bb_pieces[color][3] = self.bb_pieces[color][3].bit_unset(square_idx);
+        self.bb_pieces[color][4] = self.bb_pieces[color][4].bit_unset(square_idx);
+        self.bb_pieces[color][5] = self.bb_pieces[color][5].bit_unset(square_idx);
 
-        // clear all black pieces off the square
-        self.bb_sides[1] = self.bb_sides[1].bit_unset(square_idx);
-        self.bb_pieces[1][0] = self.bb_pieces[1][0].bit_unset(square_idx);
-        self.bb_pieces[1][1] = self.bb_pieces[1][1].bit_unset(square_idx);
-        self.bb_pieces[1][2] = self.bb_pieces[1][2].bit_unset(square_idx);
-        self.bb_pieces[1][3] = self.bb_pieces[1][3].bit_unset(square_idx);
-        self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_unset(square_idx);
-        self.bb_pieces[1][5] = self.bb_pieces[1][5].bit_unset(square_idx);
+        // update the castling rights in state if necessary
+        self.state.castling_rights = update_state_castling(self, color, square_idx);
     }
     // return all the legal moves of the position
     pub fn moves(&self) -> Vec<&str> {
-        return move_gen::get_moves::moves(&self, 0);
+        return move_gen::get_moves::moves(&self, self.state.stm);
     }
     // output -> vector of tuples: (piece color (0=white), piece id (0=pawn), piece position (a1=0))
     pub fn get_pieces(&self, piece_color: usize) -> Vec<(usize, usize, usize)> {
@@ -530,4 +532,22 @@ fn rearrange_array(old_array: std::str::Chars) -> [char; 64] {
         }
     }
     return new_array;
+}
+
+// function to update the castling state if needed
+fn update_state_castling(pos: &mut Position, color: usize, square_id: usize) -> u8 {
+    if (color == 0) & ((pos.bb_pieces[0][5].u64() >> 4) & 1 == 1) {
+        if square_id == 0 {
+            return pos.state.castling_rights ^ (1 << 2);
+        } else if square_id == 7 {
+            return pos.state.castling_rights ^ (1 << 3);
+        }
+    } else if (color == 1) & ((pos.bb_pieces[1][5].u64() >> 60) & 1 == 1) {
+        if square_id == 56 {
+            return pos.state.castling_rights ^ (1 << 0);
+        } else if square_id == 63 {
+            return pos.state.castling_rights ^ (1 << 1);
+        }
+    }
+    return pos.state.castling_rights;
 }
