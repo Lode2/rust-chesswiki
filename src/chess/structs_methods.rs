@@ -464,7 +464,7 @@ impl Position {
     }
     // return all the legal moves of the position
     pub fn moves(&self) -> Vec<&str> {
-        return move_gen::get_moves::moves(&self, self.state.stm);
+        return move_gen::get_moves::moves(&self);
     }
     // output -> vector of tuples: (piece color (0=white), piece id (0=pawn), piece position (a1=0))
     pub fn get_pieces(&self, piece_color: usize) -> Vec<(usize, usize, usize)> {
