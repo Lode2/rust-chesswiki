@@ -21,6 +21,7 @@ fn pseudo_legal_moves(pos: &Position, moves: &mut Vec<String>) {
     for i in potential_move_pieces.into_iter() {
         match i {
             (_, 0, _) => {
+                // println!("{:?}", bb_idx_to_square_id(i.2));
                 add_plegal_pawn_push(moves, &pos, i);
                 add_plegal_pawn_capture(moves, &pos, i);
             }
@@ -53,20 +54,20 @@ fn add_plegal_pawn_push(moves: &mut Vec<String>, pos: &Position, piece: (usize, 
                 false->exit function by returning the updated move list
         false->exit function by returning the original move list
     */
+
     let color = pos.state.stm;
 
     let next_square = piece.2 + 8 - 16 * color;
-    let next_empty: bool = ((pos.bb_sides[0].u64() >> next_square) & 0 == 0)
-        && ((pos.bb_sides[1].u64() >> next_square) & 0 == 0);
+    let next_empty: bool = ((pos.bb_sides[0].u64() >> next_square) & 1 == 0)
+        && ((pos.bb_sides[1].u64() >> next_square) & 1 == 0);
     if next_empty {
         moves.push(bb_idx_to_square_id(next_square));
 
-        let on_starting_rank: bool = (piece.2 >= (color * 39 + 8)) & (piece.2 <= (color * 40 + 15))
-            && ((pos.bb_sides[1].u64() >> next_square) & 0 == 0);
+        let on_starting_rank: bool = (piece.2 >= (color * 39 + 8)) & (piece.2 <= (color * 40 + 15));
         if on_starting_rank {
             let next_2_squares = piece.2 + 16 - 32 * color;
-            let next_2_empty: bool = ((pos.bb_sides[0].u64() >> next_2_squares) & 0 == 0)
-                && ((pos.bb_sides[1].u64() >> next_2_squares) & 0 == 0);
+            let next_2_empty: bool = ((pos.bb_sides[0].u64() >> next_2_squares) & 1 == 0)
+                && ((pos.bb_sides[1].u64() >> next_2_squares) & 1 == 0);
             if next_2_empty {
                 moves.push(bb_idx_to_square_id(next_2_squares));
             }
@@ -80,15 +81,15 @@ fn add_plegal_pawn_capture(moves: &mut Vec<String>, pos: &Position, piece: (usiz
             true->add takes front left to move list
             false->evaluate if en passant square front left
                 true->add takes front left to move list
-    (almost) same for front right:
-    evaluate if piece not on h file
+    (almost) same for front right, difference indicated by ! at beginning:
+    !evaluate if piece not on h file
         true->evaluate if front right square has a piece of opposing color
             true->add takes front right to move list
-            false->evaluate if there was NOT a front right en passant square
+            !false->evaluate if there was NOT a front right en passant square
                 true->evaluate if en passant square front right
                     true->add takes front right to move list
-
     */
+
     let color = pos.state.stm;
     let not_color = 1 - color;
     let State {
@@ -125,7 +126,8 @@ fn add_plegal_pawn_capture(moves: &mut Vec<String>, pos: &Position, piece: (usiz
         }
     }
 
-    let on_h_file: bool = piece.2 % 7 == 0;
+    // evaluate front right capture
+    let on_h_file: bool = (piece.2 + 1) % 8 == 0;
     if !on_h_file {
         let front_right_square = piece.2 + 9 - 18 * color;
         let front_right_occupied: bool =

@@ -439,7 +439,7 @@ impl Position {
                 self.bb_pieces[1][4] = self.bb_pieces[1][4].bit_set(square_idx);
                 self.bb_sides[1] = self.bb_sides[1].bit_set(square_idx);
             } // q
-            _ => println!("No match found in the fen data!"),
+            _ => println!("No matching piece found!"),
         };
     }
     // clear a square of a piece

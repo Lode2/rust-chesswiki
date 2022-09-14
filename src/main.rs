@@ -88,7 +88,11 @@ fn main() {
     let mut test_starting_pos = Position {
         ..Position::starting_pos()
     };
-    test_starting_pos.put_piece(2, 1, 17);
+    test_starting_pos.put_piece(2, 0, 18);
+    // test_starting_pos.put_piece(2, 1, 17);
+    test_starting_pos.put_piece(2, 1, 23);
+    test_starting_pos.put_piece(2, 1, 22);
+
     println!("{}", test_starting_pos.pretty());
 
     println!("{:?}", test_starting_pos.moves());
