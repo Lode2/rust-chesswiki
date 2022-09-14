@@ -463,7 +463,7 @@ impl Position {
         self.state.castling_rights = update_state_castling(self, color, square_idx);
     }
     // return all the legal moves of the position
-    pub fn moves(&self) -> Vec<&str> {
+    pub fn moves(&self) -> Vec<String> {
         return move_gen::get_moves::moves(&self);
     }
     // output -> vector of tuples: (piece color (0=white), piece id (0=pawn), piece position (a1=0))
