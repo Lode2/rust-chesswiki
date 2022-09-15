@@ -21,7 +21,7 @@ fn pseudo_legal_moves(pos: &Position, moves: &mut Vec<String>) {
     for i in potential_move_pieces.into_iter() {
         match i {
             (_, 0, _) => {
-                // println!("{:?}", bb_idx_to_square_id(i.2));
+                // println!("{:?}", square_id(i.2));
                 add_plegal_pawn_push(moves, &pos, i);
                 add_plegal_pawn_capture(moves, &pos, i);
             }
@@ -47,7 +47,7 @@ fn legal_moves(pos: &Position, moves: &mut Vec<String>) {
 fn add_plegal_pawn_push(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {
     /*
     evaluate if square in front is empty
-        true->add push 1 square to move list
+        true->add push possible pawn moves (including promotion)
             evaluate if pawn is on starting rank
                 true->evaluate if 2 squares in front is empty
                     true->add push 2 square to move list
@@ -56,20 +56,25 @@ fn add_plegal_pawn_push(moves: &mut Vec<String>, pos: &Position, piece: (usize, 
     */
 
     let color = pos.state.stm;
+    let not_color = 1 - color;
 
     let next_square = piece.2 + 8 - 16 * color;
     let next_empty: bool = ((pos.bb_sides[0].u64() >> next_square) & 1 == 0)
         && ((pos.bb_sides[1].u64() >> next_square) & 1 == 0);
     if next_empty {
-        moves.push(bb_idx_to_square_id(next_square));
+        let can_promote: bool =
+            (piece.2 >= (not_color * 39 + 8)) && (piece.2 <= (not_color * 40 + 15));
 
-        let on_starting_rank: bool = (piece.2 >= (color * 39 + 8)) & (piece.2 <= (color * 40 + 15));
+        add_pawn_moves(moves, can_promote, color, square_id(next_square));
+
+        let on_starting_rank: bool =
+            (piece.2 >= (color * 39 + 8)) && (piece.2 <= (color * 40 + 15));
         if on_starting_rank {
             let next_2_squares = piece.2 + 16 - 32 * color;
             let next_2_empty: bool = ((pos.bb_sides[0].u64() >> next_2_squares) & 1 == 0)
                 && ((pos.bb_sides[1].u64() >> next_2_squares) & 1 == 0);
             if next_2_empty {
-                moves.push(bb_idx_to_square_id(next_2_squares));
+                moves.push(square_id(next_2_squares));
             }
         }
     }
@@ -78,16 +83,16 @@ fn add_plegal_pawn_capture(moves: &mut Vec<String>, pos: &Position, piece: (usiz
     /*
     evaluate if piece not on a file
         true->evaluate if front left square has a piece of opposing color
-            true->add takes front left to move list
+            true->add takes front left (plus possible promotions) to move list
             false->evaluate if en passant square front left
-                true->add takes front left to move list
+                true->add takes front left (plus possible promotions) to move list
     (almost) same for front right, difference indicated by ! at beginning:
     !evaluate if piece not on h file
         true->evaluate if front right square has a piece of opposing color
-            true->add takes front right to move list
-            !false->evaluate if there was NOT a front right en passant square
+            true->add takes front right (plus possible promotions) to move list
+            !false->evaluate if there was NOT a front left en passant square
                 true->evaluate if en passant square front right
-                    true->add takes front right to move list
+                    true->add takes front right (plus possible promotions) to move list
     */
 
     let color = pos.state.stm;
@@ -97,6 +102,8 @@ fn add_plegal_pawn_capture(moves: &mut Vec<String>, pos: &Position, piece: (usiz
         ..
     } = pos.state;
 
+    let can_promote: bool = (piece.2 >= (not_color * 39 + 8)) && (piece.2 <= (not_color * 40 + 15));
+
     let on_a_file: bool = piece.2 % 8 == 0;
     let mut en_passant_front_left_occupied = false;
 
@@ -105,23 +112,20 @@ fn add_plegal_pawn_capture(moves: &mut Vec<String>, pos: &Position, piece: (usiz
         let front_left_square = piece.2 + 7 - 14 * color;
         let front_left_occupied: bool =
             (pos.bb_sides[not_color].u64() >> front_left_square) & 1 == 1;
+        let f_l_capture = format!(
+            "{}{}{}",
+            file_letter(piece.2),
+            "x",
+            square_id(front_left_square)
+        );
+
         if front_left_occupied {
-            moves.push(format!(
-                "{}{}{}",
-                bb_idx_to_file_letter(piece.2),
-                "x",
-                bb_idx_to_square_id(front_left_square)
-            ));
+            add_pawn_moves(moves, can_promote, color, f_l_capture);
         } else if en_passant_option != None {
             let en_passant_u64 = en_passant_option.unwrap();
             en_passant_front_left_occupied = (en_passant_u64 >> front_left_square) & 1 == 1;
             if en_passant_front_left_occupied {
-                moves.push(format!(
-                    "{}{}{}",
-                    bb_idx_to_file_letter(piece.2),
-                    "x",
-                    bb_idx_to_square_id(front_left_square)
-                ));
+                add_pawn_moves(moves, can_promote, color, f_l_capture);
             }
         }
     }
@@ -132,31 +136,36 @@ fn add_plegal_pawn_capture(moves: &mut Vec<String>, pos: &Position, piece: (usiz
         let front_right_square = piece.2 + 9 - 18 * color;
         let front_right_occupied: bool =
             (pos.bb_sides[not_color].u64() >> front_right_square) & 1 == 1;
+        let f_r_capture = format!(
+            "{}{}{}",
+            file_letter(piece.2),
+            "x",
+            square_id(front_right_square)
+        );
         if front_right_occupied {
-            moves.push(format!(
-                "{}{}{}",
-                bb_idx_to_file_letter(piece.2),
-                "x",
-                bb_idx_to_square_id(front_right_square)
-            ));
+            add_pawn_moves(moves, can_promote, color, f_r_capture);
         } else if en_passant_option != None {
             if !en_passant_front_left_occupied {
                 let en_passant_u64 = en_passant_option.unwrap();
                 let en_passant_front_right_occupied =
                     (en_passant_u64 >> front_right_square) & 1 == 1;
                 if en_passant_front_right_occupied {
-                    moves.push(format!(
-                        "{}{}{}",
-                        bb_idx_to_file_letter(piece.2),
-                        "x",
-                        bb_idx_to_square_id(front_right_square)
-                    ));
+                    add_pawn_moves(moves, can_promote, color, f_r_capture);
                 }
             }
         }
     }
-
-    //evaluate fron right capture
+}
+// given a base move, this function evaluates if promotion is possible and adds moves accordingly
+fn add_pawn_moves(moves: &mut Vec<String>, can_promote: bool, color: usize, base_move: String) {
+    if can_promote {
+        moves.push(format!("{}{}{}", base_move, "=", piece_name((color, 4)))); // queen
+        moves.push(format!("{}{}{}", base_move, "=", piece_name((color, 3)))); // rook
+        moves.push(format!("{}{}{}", base_move, "=", piece_name((color, 2)))); // knight
+        moves.push(format!("{}{}{}", base_move, "=", piece_name((color, 1)))); // bishop
+    } else {
+        moves.push(base_move);
+    }
 }
 
 fn add_plegal_bishop_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
@@ -166,7 +175,7 @@ fn add_plegal_queen_move(moves: &mut Vec<String>, pos: &Position, piece: (usize,
 fn add_plegal_king_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
 
 // input: an index of a bitboard (0<=index<=63), output: square id (a1 or a2, etc.)
-fn bb_idx_to_square_id(idx: usize) -> String {
+fn square_id(idx: usize) -> String {
     return match idx {
         0 => "a1",
         1 => "b1",
@@ -246,7 +255,7 @@ fn bb_idx_to_square_id(idx: usize) -> String {
 }
 
 // input: an index of a bitboard (0<=index<=63), output: rank number of this index
-fn bb_idx_to_rank_number(idx: usize) -> char {
+fn rank_number(idx: usize) -> char {
     return match idx {
         0..=7 => '1',
         8..=15 => '2',
@@ -261,7 +270,7 @@ fn bb_idx_to_rank_number(idx: usize) -> char {
 }
 
 // input: an index of a bitboard (0<=index<=63), output: file letter of this index
-fn bb_idx_to_file_letter(idx: usize) -> char {
+fn file_letter(idx: usize) -> char {
     return match idx {
         0 | 8 | 16 | 24 | 32 | 40 | 48 | 56 => 'a',
         1 | 9 | 17 | 25 | 33 | 41 | 49 | 57 => 'b',
@@ -272,6 +281,27 @@ fn bb_idx_to_file_letter(idx: usize) -> char {
         6 | 14 | 22 | 30 | 38 | 46 | 54 | 62 => 'g',
         7 | 15 | 23 | 31 | 39 | 47 | 55 | 63 => 'h',
         _ => '?',
+    };
+}
+
+// input: a tuple of 2 usizes, output: letter corresponding to the piece
+fn piece_name(id: (usize, usize)) -> char {
+    return match id {
+        (0, 0) => 'P',
+        (0, 1) => 'B',
+        (0, 2) => 'N',
+        (0, 3) => 'R',
+        (0, 4) => 'Q',
+        (0, 5) => 'K',
+
+        (1, 0) => 'p',
+        (1, 1) => 'b',
+        (1, 2) => 'n',
+        (1, 3) => 'r',
+        (1, 4) => 'q',
+        (1, 5) => 'k',
+
+        (_, _) => '?',
     };
 }
 

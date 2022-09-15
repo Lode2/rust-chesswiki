@@ -92,6 +92,9 @@ fn main() {
     // test_starting_pos.put_piece(2, 1, 17);
     test_starting_pos.put_piece(2, 1, 23);
     test_starting_pos.put_piece(2, 1, 22);
+    test_starting_pos.remove_piece(48);
+    test_starting_pos.remove_piece(56);
+    test_starting_pos.put_piece(0, 0, 48);
 
     println!("{}", test_starting_pos.pretty());
 
