@@ -85,6 +85,8 @@ fn main() {
 
     // println!("{}", test_starting_pos.pretty());
 
+    // BREAK================================================================================================================
+
     let mut test_starting_pos = Position {
         ..Position::starting_pos()
     };
@@ -99,6 +101,14 @@ fn main() {
     println!("{}", test_starting_pos.pretty());
 
     println!("{:?}", test_starting_pos.moves());
+
+    let mut empty_pos = Position {
+        ..Position::empty_pos()
+    };
+    empty_pos.put_piece(2, 0, 39);
+    println!("{}", empty_pos.pretty());
+
+    println!("{:?}", empty_pos.moves());
 }
 // article about Gigantua, fastest move generator
 // https://www.codeproject.com/Articles/5313417/Worlds-Fastest-Bitboard-Chess-Movegenerator

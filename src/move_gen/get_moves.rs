@@ -2,6 +2,8 @@
 use crate::chess::structs::BitBoard;
 use crate::chess::structs::Position;
 use crate::chess::structs::State;
+use std::num::Wrapping; // wrapping integer types to control overflow behaviour
+
 // use crate::chess::structs_methods;
 // use crate::structs_methods::Debug;
 
@@ -9,14 +11,15 @@ pub fn moves(pos: &Position) -> Vec<String> {
     let mut moves: Vec<String> = Vec::new();
 
     pseudo_legal_moves(pos, &mut moves); // push all pseudo legal moves to moves
-    legal_moves(pos, &mut moves); // remove the illegal moves from moves
+
+    // legal_moves(pos, &mut moves); // remove the illegal moves from moves
 
     return moves;
 }
 
 fn pseudo_legal_moves(pos: &Position, moves: &mut Vec<String>) {
     let potential_move_pieces = pos.get_pieces(pos.state.stm);
-    println!("{:?}", potential_move_pieces);
+    // println!("{:?}", potential_move_pieces);
 
     for i in potential_move_pieces.into_iter() {
         match i {
@@ -59,8 +62,8 @@ fn add_plegal_pawn_push(moves: &mut Vec<String>, pos: &Position, piece: (usize, 
     let not_color = 1 - color;
 
     let next_square = piece.2 + 8 - 16 * color;
-    let next_empty: bool = ((pos.bb_sides[0].u64() >> next_square) & 1 == 0)
-        && ((pos.bb_sides[1].u64() >> next_square) & 1 == 0);
+    let next_empty: bool =
+        !pos.bb_sides[0].set_bit_at(next_square) && !pos.bb_sides[1].set_bit_at(next_square);
     if next_empty {
         let can_promote: bool =
             (piece.2 >= (not_color * 39 + 8)) && (piece.2 <= (not_color * 40 + 15));
@@ -71,8 +74,8 @@ fn add_plegal_pawn_push(moves: &mut Vec<String>, pos: &Position, piece: (usize, 
             (piece.2 >= (color * 39 + 8)) && (piece.2 <= (color * 40 + 15));
         if on_starting_rank {
             let next_2_squares = piece.2 + 16 - 32 * color;
-            let next_2_empty: bool = ((pos.bb_sides[0].u64() >> next_2_squares) & 1 == 0)
-                && ((pos.bb_sides[1].u64() >> next_2_squares) & 1 == 0);
+            let next_2_empty: bool = !pos.bb_sides[0].set_bit_at(next_2_squares)
+                && !pos.bb_sides[1].set_bit_at(next_2_squares);
             if next_2_empty {
                 moves.push(square_id(next_2_squares));
             }
@@ -110,15 +113,13 @@ fn add_plegal_pawn_capture(moves: &mut Vec<String>, pos: &Position, piece: (usiz
     // evaluate front left capture
     if !on_a_file {
         let front_left_square = piece.2 + 7 - 14 * color;
-        let front_left_occupied: bool =
-            (pos.bb_sides[not_color].u64() >> front_left_square) & 1 == 1;
+        let front_left_occupied: bool = pos.bb_sides[not_color].set_bit_at(front_left_square);
         let f_l_capture = format!(
             "{}{}{}",
             file_letter(piece.2),
             "x",
             square_id(front_left_square)
         );
-
         if front_left_occupied {
             add_pawn_moves(moves, can_promote, color, f_l_capture);
         } else if en_passant_option != None {
@@ -134,8 +135,7 @@ fn add_plegal_pawn_capture(moves: &mut Vec<String>, pos: &Position, piece: (usiz
     let on_h_file: bool = (piece.2 + 1) % 8 == 0;
     if !on_h_file {
         let front_right_square = piece.2 + 9 - 18 * color;
-        let front_right_occupied: bool =
-            (pos.bb_sides[not_color].u64() >> front_right_square) & 1 == 1;
+        let front_right_occupied: bool = pos.bb_sides[not_color].set_bit_at(front_right_square);
         let f_r_capture = format!(
             "{}{}{}",
             file_letter(piece.2),
@@ -169,10 +169,72 @@ fn add_pawn_moves(moves: &mut Vec<String>, can_promote: bool, color: usize, base
 }
 
 fn add_plegal_bishop_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
-fn add_plegal_knight_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
+fn add_plegal_knight_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {
+    let color = pos.state.stm;
+
+    let piece_file: usize = file_number(piece.2); // as a number for quick calculation purposes
+    let piece_rank: usize = rank_number(piece.2);
+
+    // lookup squares given as winddirections
+    let nne: usize = piece.2 + 17;
+    let ene: usize = piece.2 + 10;
+    let oso: usize = piece.2.wrapping_sub(6); // wrapping to not panic on overflow->checking for it later
+    let sse: usize = piece.2.wrapping_sub(15);
+    let ssw: usize = piece.2.wrapping_sub(17);
+    let wsw: usize = piece.2.wrapping_sub(10);
+    let wnw: usize = piece.2 + 6;
+    let nnw: usize = piece.2 + 15;
+
+    if piece_file < 6 && piece_rank < 7 && !pos.bb_sides[color].set_bit_at(nne) {
+        add_move_or_take(pos, moves, piece.1, nne);
+    }
+    if piece_file < 7 && piece_rank < 6 && !pos.bb_sides[color].set_bit_at(ene) {
+        add_move_or_take(pos, moves, piece.1, ene);
+    }
+    // checking for the next 4 if no overflow happened
+    if oso < 64 && piece_file < 7 && piece_rank > 0 && !pos.bb_sides[color].set_bit_at(30) {
+        add_move_or_take(pos, moves, piece.1, oso);
+    }
+    if sse < 64 && piece_file < 6 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(sse) {
+        add_move_or_take(pos, moves, piece.1, sse);
+    }
+    if ssw < 64 && piece_file > 0 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(ssw) {
+        add_move_or_take(pos, moves, piece.1, ssw);
+    }
+    if wsw < 64 && piece_file > 1 && piece_rank > 0 && !pos.bb_sides[color].set_bit_at(wsw) {
+        add_move_or_take(pos, moves, piece.1, wsw);
+    }
+    if piece_file > 1 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(wnw) {
+        add_move_or_take(pos, moves, piece.1, wnw);
+    }
+    if piece_file > 0 && piece_rank < 7 && !pos.bb_sides[color].set_bit_at(nnw) {
+        add_move_or_take(pos, moves, piece.1, nnw);
+    }
+}
 fn add_plegal_rook_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
 fn add_plegal_queen_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
 fn add_plegal_king_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
+
+// this function adds a normal -or takes move to the moves vector
+fn add_move_or_take(pos: &Position, moves: &mut Vec<String>, piece: usize, target: usize) {
+    let color = pos.state.stm;
+    let not_color = 1 - color;
+    if pos.bb_sides[not_color].set_bit_at(target) {
+        // takes
+        moves.push(format!(
+            "{}x{}",
+            piece_name((color, piece)),
+            square_id(target)
+        ));
+    } else {
+        // moves
+        moves.push(format!(
+            "{}{}",
+            piece_name((color, piece)),
+            square_id(target)
+        ));
+    }
+}
 
 // input: an index of a bitboard (0<=index<=63), output: square id (a1 or a2, etc.)
 fn square_id(idx: usize) -> String {
@@ -254,8 +316,8 @@ fn square_id(idx: usize) -> String {
     .to_owned();
 }
 
-// input: an index of a bitboard (0<=index<=63), output: rank number of this index
-fn rank_number(idx: usize) -> char {
+// input: an index of a bitboard (0<=index<=63), output: rank number of this index (char)
+fn rank_number_char(idx: usize) -> char {
     return match idx {
         0..=7 => '1',
         8..=15 => '2',
@@ -266,6 +328,21 @@ fn rank_number(idx: usize) -> char {
         48..=55 => '7',
         56..=63 => '8',
         _ => '?',
+    };
+}
+
+// input: an index of a bitboard (0<=index<=63), output: rank number of this index
+fn rank_number(idx: usize) -> usize {
+    return match idx {
+        0..=7 => 1,
+        8..=15 => 2,
+        16..=23 => 3,
+        24..=31 => 4,
+        32..=39 => 5,
+        40..=47 => 6,
+        48..=55 => 7,
+        56..=63 => 8,
+        _ => 0,
     };
 }
 
@@ -281,6 +358,21 @@ fn file_letter(idx: usize) -> char {
         6 | 14 | 22 | 30 | 38 | 46 | 54 | 62 => 'g',
         7 | 15 | 23 | 31 | 39 | 47 | 55 | 63 => 'h',
         _ => '?',
+    };
+}
+
+// input: an index of a bitboard (0<=index<=63), output: file number of this index
+fn file_number(idx: usize) -> usize {
+    return match idx {
+        0 | 8 | 16 | 24 | 32 | 40 | 48 | 56 => 0,
+        1 | 9 | 17 | 25 | 33 | 41 | 49 | 57 => 1,
+        2 | 10 | 18 | 26 | 34 | 42 | 50 | 58 => 2,
+        3 | 11 | 19 | 27 | 35 | 43 | 51 | 59 => 3,
+        4 | 12 | 20 | 28 | 36 | 44 | 52 | 60 => 4,
+        5 | 13 | 21 | 29 | 37 | 45 | 53 | 61 => 5,
+        6 | 14 | 22 | 30 | 38 | 46 | 54 | 62 => 6,
+        7 | 15 | 23 | 31 | 39 | 47 | 55 | 63 => 7,
+        _ => 8,
     };
 }
 
@@ -310,7 +402,7 @@ TODO:
     get_moves file:
         finish moves function:
             1. pseudo_legal_moves
-                create move generation for all the pieces besides pawn
+                create move generation for all the pieces besides pawn and knight
             2. legal_moves
     structs_methods file:
         load method:

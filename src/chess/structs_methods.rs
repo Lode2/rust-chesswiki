@@ -45,6 +45,14 @@ impl BitBoard {
         let BitBoard(my_integer) = self;
         return my_integer;
     }
+    // find if set or unset bit at given position
+    pub fn set_bit_at(&self, pos: usize) -> bool {
+        if (self.u64() >> pos) & 1 == 1 {
+            true
+        } else {
+            false
+        }
+    }
 }
 
 impl Debug for BitBoard {
@@ -69,7 +77,7 @@ impl Debug for BitBoard {
 impl Debug for Position {
     // creates a pretty string of the position (for debugging purposes)
     fn pretty(&self) -> String {
-        let mut pretty_array: [&str; 64] = ["x "; 64];
+        let mut pretty_array: [&str; 64] = ["· "; 64];
 
         // 1. find all occupied squares for both colors -> so 2 vectors of indices
         let white_occupies = self.bb_sides[0].find_set_bits();
@@ -116,11 +124,26 @@ impl Debug for Position {
         }
 
         // 6. add the state data
-        pretty_pos += "\nSide to move (0 = w, 1 = b):";
-        pretty_pos += format!("{:08b}", self.state.stm).as_str();
-        pretty_pos += "\nCastling allowed (xxxxKQkq): ";
-        pretty_pos += format!("{:08b}", self.state.castling_rights).as_str();
-        pretty_pos += "\nEn passant square:";
+        pretty_pos += "\nSide to move: ";
+        pretty_pos += if self.state.stm == 0 {
+            "White"
+        } else {
+            "Black"
+        };
+        pretty_pos += "\nCastling rights: ";
+        if (self.state.castling_rights >> 2) & 1 == 1 {
+            pretty_pos += "W-Q-side, ";
+        };
+        if (self.state.castling_rights >> 3) & 1 == 1 {
+            pretty_pos += "W-K-side";
+        };
+        if (self.state.castling_rights >> 0) & 1 == 1 {
+            pretty_pos += "B-Q-side, ";
+        };
+        if (self.state.castling_rights >> 1) & 1 == 1 {
+            pretty_pos += "B-K-side, ";
+        };
+        pretty_pos += "\nEn passant square at index: ";
         let state_eps = if self.state.en_passant_square == None {
             "No en passant square".to_owned()
         } else {
@@ -536,13 +559,13 @@ fn rearrange_array(old_array: std::str::Chars) -> [char; 64] {
 
 // function to update the castling state if needed
 fn update_state_castling(pos: &mut Position, color: usize, square_id: usize) -> u8 {
-    if (color == 0) & ((pos.bb_pieces[0][5].u64() >> 4) & 1 == 1) {
+    if (color == 0) && ((pos.bb_pieces[0][5].u64() >> 4) & 1 == 1) {
         if square_id == 0 {
             return pos.state.castling_rights ^ (1 << 2);
         } else if square_id == 7 {
             return pos.state.castling_rights ^ (1 << 3);
         }
-    } else if (color == 1) & ((pos.bb_pieces[1][5].u64() >> 60) & 1 == 1) {
+    } else if (color == 1) && ((pos.bb_pieces[1][5].u64() >> 60) & 1 == 1) {
         if square_id == 56 {
             return pos.state.castling_rights ^ (1 << 0);
         } else if square_id == 63 {
