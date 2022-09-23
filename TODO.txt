@@ -1,0 +1,3 @@
+sliding pieces move generation: https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks
+
+make perft function: https://www.chessprogramming.org/Perft

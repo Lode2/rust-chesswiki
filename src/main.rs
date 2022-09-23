@@ -106,7 +106,7 @@ fn main() {
     let mut empty_pos = Position {
         ..Position::empty_pos()
     };
-    empty_pos.put_piece(5, 0, 54);
+    empty_pos.put_piece(5, 0, 35);
     println!("{}", empty_pos.pretty());
 
     println!("{:?}", empty_pos.moves());

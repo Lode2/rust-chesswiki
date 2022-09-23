@@ -168,7 +168,9 @@ fn add_pawn_moves(moves: &mut Vec<String>, can_promote: bool, color: usize, base
     }
 }
 
-fn add_plegal_bishop_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
+fn add_plegal_bishop_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {
+    // println!("{}",);
+}
 fn add_plegal_knight_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {
     let color = pos.state.stm;
 
@@ -178,36 +180,36 @@ fn add_plegal_knight_move(moves: &mut Vec<String>, pos: &Position, piece: (usize
     // lookup squares given as winddirections
     let nne: usize = piece.2 + 17;
     let ene: usize = piece.2 + 10;
-    let oso: usize = piece.2.wrapping_sub(6); // wrapping to not panic on overflow->checking for it later
+    let ese: usize = piece.2.wrapping_sub(6); // wrapping to not panic on overflow->checking for it later
     let sse: usize = piece.2.wrapping_sub(15);
     let ssw: usize = piece.2.wrapping_sub(17);
     let wsw: usize = piece.2.wrapping_sub(10);
     let wnw: usize = piece.2 + 6;
     let nnw: usize = piece.2 + 15;
 
-    if piece_file < 6 && piece_rank < 7 && !pos.bb_sides[color].set_bit_at(nne) {
+    if piece_file < 8 && piece_rank < 7 && !pos.bb_sides[color].set_bit_at(nne) {
         add_move_or_take(pos, moves, piece.1, nne);
     }
-    if piece_file < 7 && piece_rank < 6 && !pos.bb_sides[color].set_bit_at(ene) {
+    if piece_file < 7 && piece_rank < 8 && !pos.bb_sides[color].set_bit_at(ene) {
         add_move_or_take(pos, moves, piece.1, ene);
     }
     // checking for the next 4 if no overflow happened
-    if oso < 64 && piece_file < 7 && piece_rank > 0 && !pos.bb_sides[color].set_bit_at(oso) {
-        add_move_or_take(pos, moves, piece.1, oso);
+    if ese < 64 && piece_file < 7 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(ese) {
+        add_move_or_take(pos, moves, piece.1, ese);
     }
-    if sse < 64 && piece_file < 6 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(sse) {
+    if sse < 64 && piece_file < 8 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(sse) {
         add_move_or_take(pos, moves, piece.1, sse);
     }
-    if ssw < 64 && piece_file > 0 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(ssw) {
+    if ssw < 64 && piece_file > 1 && piece_rank > 2 && !pos.bb_sides[color].set_bit_at(ssw) {
         add_move_or_take(pos, moves, piece.1, ssw);
     }
-    if wsw < 64 && piece_file > 1 && piece_rank > 0 && !pos.bb_sides[color].set_bit_at(wsw) {
+    if wsw < 64 && piece_file > 2 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(wsw) {
         add_move_or_take(pos, moves, piece.1, wsw);
     }
-    if piece_file > 1 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(wnw) {
+    if piece_file > 2 && piece_rank < 7 && !pos.bb_sides[color].set_bit_at(wnw) {
         add_move_or_take(pos, moves, piece.1, wnw);
     }
-    if piece_file > 0 && piece_rank < 7 && !pos.bb_sides[color].set_bit_at(nnw) {
+    if piece_file > 1 && piece_rank < 7 && !pos.bb_sides[color].set_bit_at(nnw) {
         add_move_or_take(pos, moves, piece.1, nnw);
     }
 }
@@ -217,59 +219,53 @@ fn add_plegal_queen_move(moves: &mut Vec<String>, pos: &Position, piece: (usize,
     add_plegal_bishop_move(moves, pos, piece)
 }
 fn add_plegal_king_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {
+    // check if file!=a or h (=0 or 7) and if rank!=1 or 8
+
     let color = pos.state.stm;
 
     let piece_file: usize = file_number(piece.2); // as a number for quick calculation purposes
     let piece_rank: usize = rank_number(piece.2);
 
-    // check if file!=a or h (=0 or 7) and if rank!=1 or 8
+    // lookup squares given as winddirections
+    let no: usize = piece.2 + 8;
+    let no_ea: usize = piece.2 + 9;
+    let ea: usize = piece.2 + 1;
+    let so_ea: usize = piece.2.wrapping_sub(7); // wrapping to not panic on overflow->checking for it later
+    let so: usize = piece.2.wrapping_sub(8);
+    let so_we: usize = piece.2.wrapping_sub(9);
+    let we: usize = piece.2.wrapping_sub(1);
+    let no_we: usize = piece.2 + 7;
 
-    let top: usize = piece.2 + 8;
-    let top_r: usize = piece.2 + 9;
-    let right: usize = piece.2 + 1;
-    let bottom_r: usize = piece.2.wrapping_sub(7); // wrapping to not panic on overflow->checking for it later
-    let bottom: usize = piece.2.wrapping_sub(8);
-    let bottom_l: usize = piece.2.wrapping_sub(9);
-    let left: usize = piece.2.wrapping_sub(1);
-    let top_l: usize = piece.2 + 7;
-
-    if piece_rank < 8 && !pos.bb_sides[color].set_bit_at(top) {
-        add_move_or_take(pos, moves, piece.1, top);
+    if piece_rank < 8 && !pos.bb_sides[color].set_bit_at(no) {
+        add_move_or_take(pos, moves, piece.1, no);
     }
-    if piece_file < 7 && piece_rank < 8 && !pos.bb_sides[color].set_bit_at(top_r) {
-        add_move_or_take(pos, moves, piece.1, top_r);
+    if piece_file < 8 && piece_rank < 8 && !pos.bb_sides[color].set_bit_at(no_ea) {
+        add_move_or_take(pos, moves, piece.1, no_ea);
     }
-    if piece_file < 7 && !pos.bb_sides[color].set_bit_at(right) {
-        add_move_or_take(pos, moves, piece.1, right);
+    if piece_file < 8 && !pos.bb_sides[color].set_bit_at(ea) {
+        add_move_or_take(pos, moves, piece.1, ea);
     }
     // checking for the next 4 if no overflow happened
-    if bottom_r < 64
-        && piece_file < 7
-        && piece_rank > 1
-        && !pos.bb_sides[color].set_bit_at(bottom_r)
-    {
-        add_move_or_take(pos, moves, piece.1, bottom_r);
+    if so_ea < 64 && piece_file < 8 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(so_ea) {
+        add_move_or_take(pos, moves, piece.1, so_ea);
     }
-    if bottom < 64 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(bottom) {
-        add_move_or_take(pos, moves, piece.1, bottom);
+    if so < 64 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(so) {
+        add_move_or_take(pos, moves, piece.1, so);
     }
-    if bottom_l < 64
-        && piece_file > 0
-        && piece_rank > 1
-        && !pos.bb_sides[color].set_bit_at(bottom_l)
-    {
-        add_move_or_take(pos, moves, piece.1, bottom_l);
+    if so_we < 64 && piece_file > 1 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(so_we) {
+        add_move_or_take(pos, moves, piece.1, so_we);
     }
-    if piece_file > 0 && !pos.bb_sides[color].set_bit_at(left) {
-        add_move_or_take(pos, moves, piece.1, left);
+    if piece_file > 1 && !pos.bb_sides[color].set_bit_at(we) {
+        add_move_or_take(pos, moves, piece.1, we);
     }
-    if piece_file > 0 && piece_rank < 8 && !pos.bb_sides[color].set_bit_at(top_l) {
-        add_move_or_take(pos, moves, piece.1, top_l);
+    if piece_file > 1 && piece_rank < 8 && !pos.bb_sides[color].set_bit_at(no_we) {
+        add_move_or_take(pos, moves, piece.1, no_we);
     }
 }
 
 // this function adds a normal -or takes move to the moves vector
 fn add_move_or_take(pos: &Position, moves: &mut Vec<String>, piece: usize, target: usize) {
+    // this function assumes the target square is not occupied by a piece of the same color
     let color = pos.state.stm;
     let not_color = 1 - color;
     if pos.bb_sides[not_color].set_bit_at(target) {
@@ -417,15 +413,15 @@ fn file_letter(idx: usize) -> char {
 // input: an index of a bitboard (0<=index<=63), output: file number of this index
 fn file_number(idx: usize) -> usize {
     return match idx {
-        0 | 8 | 16 | 24 | 32 | 40 | 48 | 56 => 0,
-        1 | 9 | 17 | 25 | 33 | 41 | 49 | 57 => 1,
-        2 | 10 | 18 | 26 | 34 | 42 | 50 | 58 => 2,
-        3 | 11 | 19 | 27 | 35 | 43 | 51 | 59 => 3,
-        4 | 12 | 20 | 28 | 36 | 44 | 52 | 60 => 4,
-        5 | 13 | 21 | 29 | 37 | 45 | 53 | 61 => 5,
-        6 | 14 | 22 | 30 | 38 | 46 | 54 | 62 => 6,
-        7 | 15 | 23 | 31 | 39 | 47 | 55 | 63 => 7,
-        _ => 8,
+        0 | 8 | 16 | 24 | 32 | 40 | 48 | 56 => 1,
+        1 | 9 | 17 | 25 | 33 | 41 | 49 | 57 => 2,
+        2 | 10 | 18 | 26 | 34 | 42 | 50 | 58 => 3,
+        3 | 11 | 19 | 27 | 35 | 43 | 51 | 59 => 4,
+        4 | 12 | 20 | 28 | 36 | 44 | 52 | 60 => 5,
+        5 | 13 | 21 | 29 | 37 | 45 | 53 | 61 => 6,
+        6 | 14 | 22 | 30 | 38 | 46 | 54 | 62 => 7,
+        7 | 15 | 23 | 31 | 39 | 47 | 55 | 63 => 8,
+        _ => 0,
     };
 }
 
