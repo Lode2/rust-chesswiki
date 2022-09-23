@@ -97,6 +97,7 @@ fn main() {
     test_starting_pos.remove_piece(48);
     test_starting_pos.remove_piece(56);
     test_starting_pos.put_piece(0, 0, 48);
+    test_starting_pos.remove_piece(3);
 
     println!("{}", test_starting_pos.pretty());
 
@@ -105,7 +106,7 @@ fn main() {
     let mut empty_pos = Position {
         ..Position::empty_pos()
     };
-    empty_pos.put_piece(2, 0, 39);
+    empty_pos.put_piece(5, 0, 54);
     println!("{}", empty_pos.pretty());
 
     println!("{:?}", empty_pos.moves());

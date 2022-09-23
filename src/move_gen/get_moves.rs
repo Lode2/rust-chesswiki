@@ -192,7 +192,7 @@ fn add_plegal_knight_move(moves: &mut Vec<String>, pos: &Position, piece: (usize
         add_move_or_take(pos, moves, piece.1, ene);
     }
     // checking for the next 4 if no overflow happened
-    if oso < 64 && piece_file < 7 && piece_rank > 0 && !pos.bb_sides[color].set_bit_at(30) {
+    if oso < 64 && piece_file < 7 && piece_rank > 0 && !pos.bb_sides[color].set_bit_at(oso) {
         add_move_or_take(pos, moves, piece.1, oso);
     }
     if sse < 64 && piece_file < 6 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(sse) {
@@ -212,8 +212,61 @@ fn add_plegal_knight_move(moves: &mut Vec<String>, pos: &Position, piece: (usize
     }
 }
 fn add_plegal_rook_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
-fn add_plegal_queen_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
-fn add_plegal_king_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {}
+fn add_plegal_queen_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {
+    add_plegal_rook_move(moves, pos, piece);
+    add_plegal_bishop_move(moves, pos, piece)
+}
+fn add_plegal_king_move(moves: &mut Vec<String>, pos: &Position, piece: (usize, usize, usize)) {
+    let color = pos.state.stm;
+
+    let piece_file: usize = file_number(piece.2); // as a number for quick calculation purposes
+    let piece_rank: usize = rank_number(piece.2);
+
+    // check if file!=a or h (=0 or 7) and if rank!=1 or 8
+
+    let top: usize = piece.2 + 8;
+    let top_r: usize = piece.2 + 9;
+    let right: usize = piece.2 + 1;
+    let bottom_r: usize = piece.2.wrapping_sub(7); // wrapping to not panic on overflow->checking for it later
+    let bottom: usize = piece.2.wrapping_sub(8);
+    let bottom_l: usize = piece.2.wrapping_sub(9);
+    let left: usize = piece.2.wrapping_sub(1);
+    let top_l: usize = piece.2 + 7;
+
+    if piece_rank < 8 && !pos.bb_sides[color].set_bit_at(top) {
+        add_move_or_take(pos, moves, piece.1, top);
+    }
+    if piece_file < 7 && piece_rank < 8 && !pos.bb_sides[color].set_bit_at(top_r) {
+        add_move_or_take(pos, moves, piece.1, top_r);
+    }
+    if piece_file < 7 && !pos.bb_sides[color].set_bit_at(right) {
+        add_move_or_take(pos, moves, piece.1, right);
+    }
+    // checking for the next 4 if no overflow happened
+    if bottom_r < 64
+        && piece_file < 7
+        && piece_rank > 1
+        && !pos.bb_sides[color].set_bit_at(bottom_r)
+    {
+        add_move_or_take(pos, moves, piece.1, bottom_r);
+    }
+    if bottom < 64 && piece_rank > 1 && !pos.bb_sides[color].set_bit_at(bottom) {
+        add_move_or_take(pos, moves, piece.1, bottom);
+    }
+    if bottom_l < 64
+        && piece_file > 0
+        && piece_rank > 1
+        && !pos.bb_sides[color].set_bit_at(bottom_l)
+    {
+        add_move_or_take(pos, moves, piece.1, bottom_l);
+    }
+    if piece_file > 0 && !pos.bb_sides[color].set_bit_at(left) {
+        add_move_or_take(pos, moves, piece.1, left);
+    }
+    if piece_file > 0 && piece_rank < 8 && !pos.bb_sides[color].set_bit_at(top_l) {
+        add_move_or_take(pos, moves, piece.1, top_l);
+    }
+}
 
 // this function adds a normal -or takes move to the moves vector
 fn add_move_or_take(pos: &Position, moves: &mut Vec<String>, piece: usize, target: usize) {
